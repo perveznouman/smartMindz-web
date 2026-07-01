@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Color variables (--c-*) are injected at runtime from lib/theme/colors.ts via
+ * the root layout, so they are intentionally NOT declared here. This file holds
+ * only base element styling and reusable component classes.
+ */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bg text-content antialiased;
+    /* Prevent layout shift between themes before variables resolve. */
+    background-color: rgb(251 250 247);
+  }
+
+  .dark body {
+    background-color: rgb(15 14 12);
+  }
+
+  ::selection {
+    @apply bg-brand/25;
+  }
+
+  /* Respect reduced-motion preferences for all our animations. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5
+      text-sm font-medium uppercase tracking-wide transition-all duration-300
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand
+      focus-visible:ring-offset-2 focus-visible:ring-offset-bg
+      disabled:pointer-events-none disabled:opacity-60;
+  }
+
+  /* Primary button: transparent outline with glass-effect hover */
+  .btn-primary {
+    @apply btn border-2 border-brand bg-brand/5 text-brand
+      hover:bg-brand/15 hover:shadow-lg
+      dark:border-brand dark:bg-brand/10 dark:text-brand
+      dark:hover:bg-brand/20;
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-accent {
+    @apply btn border-2 border-accent bg-accent/5 text-accent
+      hover:bg-accent/15 hover:shadow-lg
+      dark:border-accent dark:bg-accent/10 dark:text-accent
+      dark:hover:bg-accent/20;
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-border bg-surface/40 text-content
+      hover:bg-surface/60 dark:hover:bg-surface-2/40;
+    backdrop-filter: blur(8px);
+  }
+
+  .btn-ghost {
+    @apply btn text-content hover:bg-surface/40;
+    backdrop-filter: blur(8px);
+  }
+
+  /* Glass card: frosted glass effect */
+  .card {
+    @apply rounded-2xl border border-border/30 shadow-soft;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
+
+  .dark .card {
+    background: rgba(30, 30, 35, 0.5);
+    border-color: rgba(70, 70, 80, 0.3);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border-2 border-border/40 px-4 py-2.5 text-sm
+      text-content placeholder:text-content-muted/50 transition-all duration-200
+      focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30
+      disabled:opacity-60;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px);
+  }
+
+  .dark .input-field {
+    background: rgba(45, 45, 52, 0.5);
+    border-color: rgba(70, 70, 80, 0.4);
+  }
+
+  .label-field {
+    @apply mb-2 block text-sm font-semibold uppercase tracking-wide text-content;
+  }
+
+  /* Eyebrow: refined badge with glass effect */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-brand/30
+      px-3.5 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand;
+    background: rgba(217, 81, 0, 0.08);
+    backdrop-filter: blur(10px);
+  }
+
+  .dark .eyebrow {
+    @apply border-brand/40 text-brand;
+    background: rgba(255, 139, 45, 0.1);
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand via-accent to-highlight bg-clip-text text-transparent;
+  }
+
+  /* Refined display text with increased letter-spacing (Bugatti-inspired) */
+  .heading-xl {
+    @apply text-4xl sm:text-6xl font-display font-bold uppercase tracking-widest;
+    letter-spacing: 0.08em;
+  }
+
+  .heading-lg {
+    @apply text-3xl sm:text-4xl font-display font-bold uppercase tracking-wider;
+    letter-spacing: 0.06em;
+  }
+
+  .heading-md {
+    @apply text-2xl sm:text-3xl font-display font-bold uppercase tracking-wider;
+    letter-spacing: 0.04em;
+  }
+
+  .heading-sm {
+    @apply text-xl font-display font-semibold uppercase tracking-wide;
+    letter-spacing: 0.03em;
+  }
+
+  /* Body text: serif for elegance */
+  .body-lg {
+    @apply text-lg leading-relaxed text-content/90;
+  }
+
+  .body-md {
+    @apply text-base leading-relaxed text-content/85;
+  }
+
+  .body-sm {
+    @apply text-sm leading-relaxed text-content-muted;
+  }
+}

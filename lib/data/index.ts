@@ -1,0 +1,221 @@
+import "server-only";
+import { cache } from "react";
+import { getServerReadClient } from "@/lib/supabase/server";
+import {
+  fallbackCategories,
+  fallbackEvents,
+  fallbackGallery,
+  fallbackSiteContent,
+  fallbackTeam,
+} from "@/lib/content/fallback";
+import type {
+  Category,
+  EventItem,
+  EventResult,
+  GalleryPhoto,
+  SiteContent,
+  TeamMember,
+} from "@/lib/types";
+
+/**
+ * Data access layer.
+ *
+ * Every getter tries Supabase first and transparently falls back to the
+ * built-in content in lib/content/fallback.ts when Supabase is not configured
+ * or a query fails. This keeps the site fully functional offline and makes the
+ * DB the source of truth once connected. Results are request-memoised via
+ * React `cache`.
+ */
+
+// ---- row -> domain mappers -------------------------------------------------
+
+type EventRow = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  event_date: string | null;
+  location: string | null;
+  status: string;
+  cover_url: string | null;
+  event_categories?: { category_id: string }[] | null;
+};
+
+function mapEvent(row: EventRow): EventItem {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    description: row.description ?? "",
+    eventDate: row.event_date,
+    location: row.location,
+    status: row.status === "past" ? "past" : "upcoming",
+    coverUrl: row.cover_url,
+    categoryIds: (row.event_categories ?? []).map((c) => c.category_id),
+  };
+}
+
+// ---- getters ---------------------------------------------------------------
+
+export const getSiteContent = cache(async (): Promise<SiteContent> => {
+  const supabase = getServerReadClient();
+  if (!supabase) return fallbackSiteContent;
+
+  const { data, error } = await supabase
+    .from("site_content")
+    .select("key, value");
+  if (error || !data) return fallbackSiteContent;
+
+  // Merge DB key/value pairs over the defaults so missing keys stay populated.
+  const overrides = Object.fromEntries(
+    data.map((row: { key: string; value: unknown }) => [row.key, row.value]),
+  );
+  return { ...fallbackSiteContent, ...overrides } as SiteContent;
+});
+
+export const getCategories = cache(async (): Promise<Category[]> => {
+  const supabase = getServerReadClient();
+  if (!supabase) return fallbackCategories;
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, name, sort_order")
+    .order("sort_order");
+  if (error || !data) return fallbackCategories;
+
+  return data.map((r: { id: string; name: string; sort_order: number }) => ({
+    id: r.id,
+    name: r.name,
+    sortOrder: r.sort_order,
+  }));
+});
+
+const EVENT_SELECT =
+  "id, slug, title, description, event_date, location, status, cover_url, event_categories(category_id)";
+
+export const getEvents = cache(async (): Promise<EventItem[]> => {
+  const supabase = getServerReadClient();
+  if (!supabase) return fallbackEvents;
+
+  const { data, error } = await supabase
+    .from("events")
+    .select(EVENT_SELECT)
+    .order("event_date", { ascending: false });
+  if (error || !data) return fallbackEvents;
+
+  return (data as EventRow[]).map(mapEvent);
+});
+
+export async function getEventBySlug(slug: string): Promise<EventItem | null> {
+  const supabase = getServerReadClient();
+  if (!supabase) return fallbackEvents.find((e) => e.slug === slug) ?? null;
+
+  const { data, error } = await supabase
+    .from("events")
+    .select(EVENT_SELECT)
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error || !data) return fallbackEvents.find((e) => e.slug === slug) ?? null;
+
+  return mapEvent(data as EventRow);
+}
+
+/** Events open to a given category — powers the dependent dropdown. */
+export async function getEventsByCategory(
+  categoryId: string,
+): Promise<EventItem[]> {
+  const all = await getEvents();
+  return all.filter(
+    (e) => e.status === "upcoming" && e.categoryIds.includes(categoryId),
+  );
+}
+
+export const getTeam = cache(async (): Promise<TeamMember[]> => {
+  const supabase = getServerReadClient();
+  if (!supabase) return fallbackTeam;
+
+  const { data, error } = await supabase
+    .from("team_members")
+    .select("id, name, role, photo_url, sort_order")
+    .order("sort_order");
+  if (error || !data) return fallbackTeam;
+
+  return data.map(
+    (r: {
+      id: string;
+      name: string;
+      role: string;
+      photo_url: string | null;
+      sort_order: number;
+    }) => ({
+      id: r.id,
+      name: r.name,
+      role: r.role,
+      photoUrl: r.photo_url,
+      sortOrder: r.sort_order,
+    }),
+  );
+});
+
+export async function getGallery(eventId?: string): Promise<GalleryPhoto[]> {
+  const supabase = getServerReadClient();
+  if (!supabase) {
+    return eventId
+      ? fallbackGallery.filter((p) => p.eventId === eventId)
+      : fallbackGallery;
+  }
+
+  let query = supabase
+    .from("gallery_photos")
+    .select("id, url, thumb_url, caption, event_id, sort_order")
+    .order("sort_order");
+  if (eventId) query = query.eq("event_id", eventId);
+
+  const { data, error } = await query;
+  if (error || !data) return eventId ? [] : fallbackGallery;
+
+  return data.map(
+    (r: {
+      id: string;
+      url: string;
+      thumb_url: string | null;
+      caption: string | null;
+      event_id: string | null;
+      sort_order: number;
+    }) => ({
+      id: r.id,
+      url: r.url,
+      thumbUrl: r.thumb_url,
+      caption: r.caption,
+      eventId: r.event_id,
+      sortOrder: r.sort_order,
+    }),
+  );
+}
+
+export async function getResults(eventId: string): Promise<EventResult[]> {
+  const supabase = getServerReadClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("results")
+    .select("id, event_id, title, body, file_url")
+    .eq("event_id", eventId);
+  if (error || !data) return [];
+
+  return data.map(
+    (r: {
+      id: string;
+      event_id: string;
+      title: string;
+      body: string | null;
+      file_url: string | null;
+    }) => ({
+      id: r.id,
+      eventId: r.event_id,
+      title: r.title,
+      body: r.body,
+      fileUrl: r.file_url,
+    }),
+  );
+}
