@@ -21,6 +21,7 @@ import type { SiteContent } from "@/lib/types";
 
 type SuccessState = {
   registrationId: string | null;
+  fullName: string;
   eventTitle: string;
   joinLink: string;
   contact: string;
@@ -130,6 +131,7 @@ export function RegistrationForm({
       }
       setSuccess({
         registrationId: data.registrationId ?? null,
+        fullName: values.fullName,
         eventTitle: data.eventTitle,
         joinLink: data.joinLink,
         contact: data.contact,
@@ -174,7 +176,8 @@ export function RegistrationForm({
         </div>
         <h3 className="mt-5 text-2xl font-bold font-display">You&apos;re all set! 🎉</h3>
         <p className="mt-2 text-sm text-content-muted">
-          Payment received for <strong className="text-content">{success.eventTitle}</strong>.
+          Payment received for <strong className="text-content">{success.fullName}</strong> —{" "}
+          <strong className="text-content">{success.eventTitle}</strong>.
           Join our WhatsApp group for updates, schedule and event details.
         </p>
 
