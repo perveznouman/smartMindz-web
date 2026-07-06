@@ -28,8 +28,8 @@ type Token = { light: string; dark: string };
  * requires renaming usages across the codebase.
  */
 export const palette = {
-  /** Primary brand color — refined saffron. Headlines, accents, premium elements. */
-  "brand": { light: "217 81 0", dark: "255 139 45" },
+  /** Primary brand color — vibrant blue. Headlines, accents, premium elements. */
+  "brand": { light: "37 99 235", dark: "96 165 250" },
   /** Readable foreground on top of `brand`. */
   "brand-fg": { light: "255 255 255", dark: "23 20 16" },
 
@@ -41,8 +41,8 @@ export const palette = {
   /** Tertiary highlight — emerald (patriotic). */
   "highlight": { light: "5 150 105", dark: "16 185 129" },
 
-  /** Page background (deep luxe). */
-  "bg": { light: "248 247 245", dark: "8 8 10" },
+  /** Page background (soft off-white). */
+  "bg": { light: "242 242 247", dark: "8 8 10" },
   /** Glass card / panel background (semi-transparent). */
   "surface": { light: "255 255 255", dark: "30 30 35" },
   /** Elevated glass surface (slightly higher opacity). */

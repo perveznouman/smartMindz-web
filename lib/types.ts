@@ -79,8 +79,9 @@ export interface SiteContent {
 export interface RegistrationInput {
   fullName: string;
   categoryId: string;
+  classYear: string;
   institution: string;
   whatsapp: string;
-  eventId: string;
+  event: string;
   city: string;
 }

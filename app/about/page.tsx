@@ -22,16 +22,40 @@ export default async function AboutPage() {
           subtitle={content.mission}
         />
 
-        <div className="mx-auto max-w-3xl space-y-5">
+        <div className="mx-auto max-w-3xl space-y-6">
           {content.aboutStory.map((para, i) => (
             <Reveal key={i} delay={i * 0.05}>
-              <p className="text-base leading-relaxed text-content-muted sm:text-lg">{para}</p>
+              <p className="text-base leading-relaxed text-content-muted sm:text-lg whitespace-pre-line">{para}</p>
             </Reveal>
           ))}
         </div>
+      </Section>
 
-        {/* Quick facts */}
-        <div className="mx-auto mt-12 grid max-w-3xl gap-4 sm:grid-cols-3">
+      {/* What We Offer */}
+      <Section className="!py-12">
+        <SectionHeader eyebrow="Our commitment" title="What we offer" />
+        <div className="mx-auto max-w-2xl">
+          <ul className="space-y-3">
+            {[
+              "Engaging online and offline competitions",
+              "Skill-building opportunities in Tamil, Hindi, Urdu, and English",
+              "A welcoming platform for all age groups and backgrounds",
+              "A space to learn, participate, express, and grow",
+            ].map((item, i) => (
+              <Reveal key={i} delay={i * 0.05}>
+                <li className="flex gap-4">
+                  <span className="text-brand text-xl font-bold">•</span>
+                  <span className="text-base text-content-muted leading-relaxed">{item}</span>
+                </li>
+              </Reveal>
+            ))}
+          </ul>
+        </div>
+      </Section>
+
+      {/* Quick facts */}
+      <Section className="!py-12">
+        <div className="mx-auto grid max-w-3xl gap-4 sm:grid-cols-3">
           <div className="card p-5">
             <MapPin className="h-6 w-6 text-brand" />
             <h3 className="mt-3 text-sm font-semibold">Based in</h3>
@@ -51,7 +75,7 @@ export default async function AboutPage() {
       </Section>
 
       {/* Highlights */}
-      <Section className="bg-surface/40 !pt-4">
+      <Section className="bg-surface/40">
         <SectionHeader eyebrow="What we stand for" title="What makes us different" />
         <div className="grid gap-6 sm:grid-cols-2">
           {content.aboutHighlights.map((h, i) => (

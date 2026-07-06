@@ -22,13 +22,6 @@ export function Hero({ content }: { content: SiteContent }) {
       <div className="container-page py-20 sm:py-28 lg:py-32">
         <div className="mx-auto max-w-3xl text-center">
           <Reveal>
-            <span className="eyebrow">
-              <Sparkles className="h-3.5 w-3.5 text-brand" />
-              {content.languages.join(" · ")}
-            </span>
-          </Reveal>
-
-          <Reveal delay={0.05}>
             <h1 className="heading-xl mt-6">
               <span className="gradient-text">{content.heroTitle}</span>
             </h1>

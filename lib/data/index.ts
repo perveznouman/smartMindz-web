@@ -57,6 +57,39 @@ function mapEvent(row: EventRow): EventItem {
 
 // ---- getters ---------------------------------------------------------------
 
+/**
+ * Supabase `site_content` values are free-form JSON, so a value edited in the
+ * dashboard can arrive in the wrong shape (e.g. `aboutStory` saved as a single
+ * string instead of an array of paragraphs). Coerce the array-typed fields so
+ * pages that `.map()` over them never crash at build/runtime, falling back to
+ * the defaults when a value is unusable.
+ */
+function normalizeSiteContent(merged: Record<string, unknown>): SiteContent {
+  const asArray = <T,>(value: unknown, fallback: T[]): T[] =>
+    Array.isArray(value) ? (value as T[]) : fallback;
+
+  let aboutStory = merged.aboutStory;
+  if (typeof aboutStory === "string") {
+    // A single string → split into paragraphs on blank lines.
+    aboutStory = aboutStory
+      .split(/\n\s*\n/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+  }
+  if (!Array.isArray(aboutStory) || aboutStory.length === 0) {
+    aboutStory = fallbackSiteContent.aboutStory;
+  }
+
+  return {
+    ...(merged as unknown as SiteContent),
+    aboutStory: aboutStory as string[],
+    aboutHighlights: asArray(merged.aboutHighlights, fallbackSiteContent.aboutHighlights),
+    languages: asArray(merged.languages, fallbackSiteContent.languages),
+    rewards: asArray(merged.rewards, fallbackSiteContent.rewards),
+    stats: asArray(merged.stats, fallbackSiteContent.stats),
+  };
+}
+
 export const getSiteContent = cache(async (): Promise<SiteContent> => {
   const supabase = getServerReadClient();
   if (!supabase) return fallbackSiteContent;
@@ -70,7 +103,7 @@ export const getSiteContent = cache(async (): Promise<SiteContent> => {
   const overrides = Object.fromEntries(
     data.map((row: { key: string; value: unknown }) => [row.key, row.value]),
   );
-  return { ...fallbackSiteContent, ...overrides } as SiteContent;
+  return normalizeSiteContent({ ...fallbackSiteContent, ...overrides });
 });
 
 export const getCategories = cache(async (): Promise<Category[]> => {

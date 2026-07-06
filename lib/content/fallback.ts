@@ -104,19 +104,19 @@ export const fallbackSiteContent: SiteContent = {
   tagline: "Where Every Talent Shines",
   heroTitle: "Where Every Talent Shines",
   heroSubtitle:
-    "SmartMindz celebrates hidden gems across all ages and backgrounds — school kids, college students, working professionals and homemakers. We nurture skills in Tamil, Hindi, Urdu and English through thrilling online and offline events.",
+    "SmartMindz celebrates hidden gems from every walk of life — school students, college students, working professionals, and homemakers alike.\n\nWe believe talent has no age limit and no single background. That's why we create opportunities for everyone to learn, perform, and shine.",
   mission:
     "SmartMindz is the ultimate talent celebration platform that truly values and rewards hidden gems across all walks of life — intelligence, innovation and creativity, recognised and rewarded.",
   aboutStory: [
-    "SmartMindz began with a simple belief: talent exists everywhere, in every age and every background — it just needs a stage. From school kids to homemakers, we create opportunities for people to participate, perform and get recognised.",
-    "Rooted in the pride of Vaniyambadi, we conduct thrilling online and offline events twice a year. Every participant is celebrated with guaranteed rewards — certificates, trophies and grand felicitations — because being seen and valued is where growth begins.",
-    "We nurture real-world skills across multiple languages — Tamil, Hindi, Urdu and English — through competitions, experiments and live, energy-packed performances. Your talent deserves the spotlight.",
+    "SmartMindz celebrates hidden gems from every walk of life — school students, college students, working professionals, and homemakers alike.\n\nWe believe talent has no age limit and no single background. That's why we create opportunities for everyone to learn, perform, and shine.\n\nThrough exciting online and offline events, SmartMindz nurtures skills in English, Tamil, Urdu, Hindi, helping participants build confidence, creativity, and self-expression in the language they love.",
+    "Whether it's a child taking their first step onto a stage, a student exploring their potential, a professional rediscovering a passion, or a homemaker showcasing a hidden talent — SmartMindz is a platform where every voice matters and every talent gets its moment.",
+    "Our mission is to identify, encourage, and celebrate talent by creating inclusive opportunities that inspire confidence, creativity, and lifelong learning. Through engaging competitions, skill-building opportunities across multiple languages, and a welcoming platform for all age groups, we help every individual discover and share their unique gifts.",
   ],
   aboutHighlights: [
-    { title: "All ages, all backgrounds", body: "School kids, college students, working professionals and homemakers — everyone has a stage." },
-    { title: "Multilingual", body: "Events run in Tamil, Hindi, Urdu and English so no one is left out." },
-    { title: "Guaranteed rewards", body: "Certificates, trophies and grand felicitations for participants." },
-    { title: "Vaniyambadi pride", body: "Born in Vaniyambadi, growing across communities." },
+    { title: "Engaging competitions", body: "Online and offline events designed to challenge, inspire, and celebrate talent." },
+    { title: "Skill-building opportunities", body: "Master skills in Tamil, Hindi, Urdu, and English with expert guidance and real-world practice." },
+    { title: "Inclusive platform", body: "A welcoming space for all age groups and backgrounds — no talent left behind." },
+    { title: "Learn, express, grow", body: "Develop confidence, creativity, and self-expression while connecting with a vibrant community." },
   ],
   logoUrl: "/logo.jpeg",
   location: "Vaniyambadi, Tamil Nadu, India",

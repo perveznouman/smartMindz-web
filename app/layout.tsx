@@ -6,7 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { RegistrationProvider } from "@/components/registration/RegistrationContext";
 import { ColorManager } from "@/lib/theme/colors";
-import { getCategories, getSiteContent } from "@/lib/data";
+import { getSiteContent } from "@/lib/data";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const jakarta = Plus_Jakarta_Sans({
@@ -58,11 +58,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   // Fetched once on the server and shared with the nav, footer and the
-  // registration modal (categories drive the dependent dropdown).
-  const [content, categories] = await Promise.all([
-    getSiteContent(),
-    getCategories(),
-  ]);
+  // registration modal.
+  const content = await getSiteContent();
 
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jakarta.variable}`}>
@@ -72,7 +69,7 @@ export default async function RootLayout({
       </head>
       <body className="font-sans">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <RegistrationProvider categories={categories} content={content}>
+          <RegistrationProvider content={content}>
             <div className="flex min-h-screen flex-col">
               <Navbar content={content} />
               <main className="flex-1">{children}</main>

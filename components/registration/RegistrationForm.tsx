@@ -3,36 +3,59 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Loader2, MessageCircle, PartyPopper } from "lucide-react";
+import {
+  CheckCircle2,
+  Loader2,
+  MessageCircle,
+  PartyPopper,
+  UploadCloud,
+} from "lucide-react";
 import {
   registrationSchema,
   type RegistrationFormValues,
 } from "@/lib/validation/registration";
-import type { Category, SiteContent } from "@/lib/types";
-
-type EventOption = { id: string; title: string; categoryIds: string[] };
+import QRCode from "qrcode";
+import { festCategories, getFestCategory } from "@/lib/data/festEvents";
+import { PAYMENT, buildUpiLink } from "@/lib/data/payment";
+import type { SiteContent } from "@/lib/types";
 
 type SuccessState = {
+  registrationId: string | null;
   eventTitle: string;
   joinLink: string;
   contact: string;
 };
 
+/** Preset cities for the City dropdown; "Other" reveals a free-text field. */
+const CITY_OPTIONS = [
+  "Vaniyambadi",
+  "Ambur",
+  "Oomrabad",
+  "Gudiyatum",
+  "Chennai",
+  "Bengaluru",
+  "MelVisharam",
+  "Vellore",
+];
+
 export function RegistrationForm({
-  categories,
   content,
-  presetEventId,
   onClose,
 }: {
-  categories: Category[];
   content: SiteContent;
-  presetEventId?: string;
   onClose?: () => void;
 }) {
-  const [allEvents, setAllEvents] = useState<EventOption[]>([]);
-  const [eventsLoading, setEventsLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState<SuccessState | null>(null);
+  // Tracks the City dropdown selection; "Other" reveals the free-text input.
+  const [cityChoice, setCityChoice] = useState("");
+  // Post-registration payment step.
+  const [paymentFile, setPaymentFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [paymentUploaded, setPaymentUploaded] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [joinQrUrl, setJoinQrUrl] = useState<string | null>(null);
 
   const {
     register,
@@ -45,57 +68,52 @@ export function RegistrationForm({
     defaultValues: {
       fullName: "",
       categoryId: "",
+      classYear: "",
       institution: "",
       whatsapp: "",
-      eventId: "",
+      event: "",
       city: "",
     },
   });
 
   const selectedCategory = watch("categoryId");
-  const selectedEvent = watch("eventId");
+  const selectedEvent = watch("event");
+  const selectedClassYear = watch("classYear");
 
-  // Fetch the (dynamic) event list from the datasource once.
-  useEffect(() => {
-    let active = true;
-    fetch("/api/events")
-      .then((r) => r.json())
-      .then((data) => {
-        if (!active) return;
-        setAllEvents(data.events ?? []);
-      })
-      .catch(() => active && setAllEvents([]))
-      .finally(() => active && setEventsLoading(false));
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // Events available for the chosen category — this is the dependent dropdown.
-  const filteredEvents = useMemo(
-    () =>
-      selectedCategory
-        ? allEvents.filter((e) => e.categoryIds.includes(selectedCategory))
-        : [],
-    [allEvents, selectedCategory],
+  // The chosen category drives both dependent dropdowns.
+  const activeCategory = useMemo(
+    () => getFestCategory(selectedCategory),
+    [selectedCategory],
   );
 
-  // If launched from a specific event, preselect its category + the event.
+  // Clear the event + class/year if they no longer belong to the new category.
   useEffect(() => {
-    if (!presetEventId || allEvents.length === 0) return;
-    const evt = allEvents.find((e) => e.id === presetEventId);
-    if (evt) {
-      setValue("categoryId", evt.categoryIds[0] ?? "");
-      setValue("eventId", evt.id);
+    if (selectedEvent && !activeCategory?.events.includes(selectedEvent)) {
+      setValue("event", "");
     }
-  }, [presetEventId, allEvents, setValue]);
+    if (
+      selectedClassYear &&
+      !activeCategory?.classYears.includes(selectedClassYear)
+    ) {
+      setValue("classYear", "");
+    }
+  }, [activeCategory, selectedEvent, selectedClassYear, setValue]);
 
-  // Clear the event if it no longer belongs to the newly chosen category.
+  // Generate the UPI QR once the payment step is reached.
   useEffect(() => {
-    if (selectedEvent && !filteredEvents.some((e) => e.id === selectedEvent)) {
-      setValue("eventId", "");
-    }
-  }, [filteredEvents, selectedEvent, setValue]);
+    if (!success || paymentUploaded) return;
+    QRCode.toDataURL(buildUpiLink(), { width: 220, margin: 1 })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(null));
+  }, [success, paymentUploaded]);
+
+  // Generate the WhatsApp group QR once payment is done.
+  useEffect(() => {
+    if (!success || !paymentUploaded) return;
+    QRCode.toDataURL(success.joinLink, { width: 220, margin: 1 })
+      .then(setJoinQrUrl)
+      .catch(() => setJoinQrUrl(null));
+  }, [success, paymentUploaded]);
 
   async function onSubmit(values: RegistrationFormValues) {
     setServerError(null);
@@ -111,6 +129,7 @@ export function RegistrationForm({
         return;
       }
       setSuccess({
+        registrationId: data.registrationId ?? null,
         eventTitle: data.eventTitle,
         joinLink: data.joinLink,
         contact: data.contact,
@@ -120,23 +139,64 @@ export function RegistrationForm({
     }
   }
 
-  if (success) {
+  async function handlePaymentUpload(e: React.FormEvent) {
+    e.preventDefault();
+    if (!paymentFile) {
+      setUploadError("Please choose your payment screenshot.");
+      return;
+    }
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", paymentFile);
+      if (success?.registrationId) fd.append("registrationId", success.registrationId);
+      const res = await fetch("/api/register/payment", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        setUploadError(data.error ?? "Upload failed. Please try again.");
+        return;
+      }
+      setPaymentUploaded(true);
+    } catch {
+      setUploadError("Network error. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  // Step 2 — payment uploaded: reveal the WhatsApp group link.
+  if (success && paymentUploaded) {
     return (
       <div className="text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15">
           <PartyPopper className="h-8 w-8 text-success" />
         </div>
-        <h3 className="mt-5 text-2xl font-bold font-display">You&apos;re registered! 🎉</h3>
+        <h3 className="mt-5 text-2xl font-bold font-display">You&apos;re all set! 🎉</h3>
         <p className="mt-2 text-sm text-content-muted">
-          Thanks for registering for <strong className="text-content">{success.eventTitle}</strong>.
-          Join our WhatsApp group below for updates, schedule and event details.
+          Payment received for <strong className="text-content">{success.eventTitle}</strong>.
+          Join our WhatsApp group for updates, schedule and event details.
         </p>
+
+        {joinQrUrl && (
+          <div className="mt-5 rounded-2xl border border-brand/30 bg-brand/5 p-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={joinQrUrl}
+              alt="Scan to join the WhatsApp group"
+              className="mx-auto h-44 w-44 rounded-xl bg-white p-2"
+            />
+            <p className="mt-2 text-xs text-content-muted">
+              Scan to join from another device
+            </p>
+          </div>
+        )}
 
         <a
           href={success.joinLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary mt-6 w-full px-6 py-3 text-base"
+          className="btn-primary mt-4 w-full px-6 py-3 text-base"
         >
           <MessageCircle className="h-5 w-5" />
           Join the WhatsApp group
@@ -152,6 +212,88 @@ export function RegistrationForm({
             Close
           </button>
         )}
+      </div>
+    );
+  }
+
+  // Step 1 — registered: ask for the payment screenshot before the group link.
+  if (success) {
+    return (
+      <div className="text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15">
+          <CheckCircle2 className="h-8 w-8 text-success" />
+        </div>
+        <h3 className="mt-5 text-2xl font-bold font-display">You&apos;re registered! 🎉</h3>
+        <p className="mt-2 text-sm text-content-muted">
+          One last step for <strong className="text-content">{success.eventTitle}</strong> —
+          pay the entry fee and upload your payment screenshot to confirm your spot
+          and unlock the WhatsApp group.
+        </p>
+
+        <div className="mt-5 rounded-2xl border border-brand/30 bg-brand/5 p-4 text-center">
+          <p className="text-sm text-content-muted">
+            Amount to pay
+            <span className="ml-2 text-lg font-bold text-brand">₹{PAYMENT.amount}</span>
+            <span className="ml-1 text-xs text-content-muted">per event</span>
+          </p>
+
+          {qrDataUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={qrDataUrl}
+              alt={`Scan to pay ₹${PAYMENT.amount} via UPI`}
+              className="mx-auto mt-3 h-44 w-44 rounded-xl bg-white p-2"
+            />
+          )}
+
+          <p className="mt-2 text-xs text-content-muted">
+            Scan with any UPI app · UPI ID:{" "}
+            <span className="font-medium text-content">{PAYMENT.upiId}</span>
+          </p>
+
+          <a
+            href={buildUpiLink()}
+            className="btn-outline mt-3 w-full px-4 py-2 text-sm sm:hidden"
+          >
+            Pay ₹{PAYMENT.amount} in a UPI app
+          </a>
+        </div>
+
+        <form onSubmit={handlePaymentUpload} className="mt-5 text-left">
+          <label htmlFor="payment" className="label-field">Payment screenshot</label>
+          <input
+            id="payment"
+            type="file"
+            accept="image/*,application/pdf"
+            className="input-field file:mr-3 file:rounded-full file:border-0 file:bg-brand/10 file:px-4 file:py-1.5 file:text-sm file:font-medium file:text-brand"
+            onChange={(e) => {
+              setPaymentFile(e.target.files?.[0] ?? null);
+              setUploadError(null);
+            }}
+          />
+          {uploadError && <p className="mt-1 text-xs text-danger">{uploadError}</p>}
+
+          <button
+            type="submit"
+            disabled={uploading}
+            className="btn-primary mt-4 w-full px-6 py-3 text-base"
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" /> Uploading…
+              </>
+            ) : (
+              <>
+                <UploadCloud className="h-5 w-5" /> Upload &amp; continue
+              </>
+            )}
+          </button>
+        </form>
+
+        <p className="mt-4 text-xs text-content-muted">
+          Questions? Message us on WhatsApp at{" "}
+          <span className="font-medium text-content">{success.contact}</span>.
+        </p>
       </div>
     );
   }
@@ -172,40 +314,52 @@ export function RegistrationForm({
           {errors.fullName && <p className="mt-1 text-xs text-danger">{errors.fullName.message}</p>}
         </div>
 
+        <div>
+          <label htmlFor="categoryId" className="label-field">Category</label>
+          <select id="categoryId" className="input-field" {...register("categoryId")}>
+            <option value="">Select category…</option>
+            {festCategories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          {errors.categoryId && <p className="mt-1 text-xs text-danger">{errors.categoryId.message}</p>}
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="categoryId" className="label-field">Age / Category</label>
-            <select id="categoryId" className="input-field" {...register("categoryId")}>
-              <option value="">Select category…</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+            <label htmlFor="event" className="label-field">Event</label>
+            <select
+              id="event"
+              className="input-field"
+              disabled={!activeCategory}
+              {...register("event")}
+            >
+              <option value="">
+                {!activeCategory ? "Select a category first" : "Select event…"}
+              </option>
+              {activeCategory?.events.map((e) => (
+                <option key={e} value={e}>{e}</option>
               ))}
             </select>
-            {errors.categoryId && <p className="mt-1 text-xs text-danger">{errors.categoryId.message}</p>}
+            {errors.event && <p className="mt-1 text-xs text-danger">{errors.event.message}</p>}
           </div>
 
           <div>
-            <label htmlFor="eventId" className="label-field">Event</label>
+            <label htmlFor="classYear" className="label-field">Class / Year</label>
             <select
-              id="eventId"
+              id="classYear"
               className="input-field"
-              disabled={!selectedCategory || eventsLoading}
-              {...register("eventId")}
+              disabled={!activeCategory}
+              {...register("classYear")}
             >
               <option value="">
-                {!selectedCategory
-                  ? "Select a category first"
-                  : eventsLoading
-                    ? "Loading events…"
-                    : filteredEvents.length === 0
-                      ? "No open events for this category"
-                      : "Select event…"}
+                {!activeCategory ? "Select a category first" : "Select class / year…"}
               </option>
-              {filteredEvents.map((e) => (
-                <option key={e.id} value={e.id}>{e.title}</option>
+              {activeCategory?.classYears.map((cy) => (
+                <option key={cy} value={cy}>{cy}</option>
               ))}
             </select>
-            {errors.eventId && <p className="mt-1 text-xs text-danger">{errors.eventId.message}</p>}
+            {errors.classYear && <p className="mt-1 text-xs text-danger">{errors.classYear.message}</p>}
           </div>
         </div>
 
@@ -222,8 +376,37 @@ export function RegistrationForm({
             {errors.whatsapp && <p className="mt-1 text-xs text-danger">{errors.whatsapp.message}</p>}
           </div>
           <div>
-            <label htmlFor="city" className="label-field">City</label>
-            <input id="city" type="text" autoComplete="address-level2" className="input-field" placeholder="Your city" {...register("city")} />
+            <label htmlFor="cityChoice" className="label-field">City</label>
+            <select
+              id="cityChoice"
+              className="input-field"
+              value={cityChoice}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCityChoice(val);
+                // For a preset city the value is the city itself; for "Other"
+                // clear it so the revealed text field can capture the entry.
+                // Don't validate on "Other" — wait until the user types.
+                setValue("city", val === "Other" ? "" : val, {
+                  shouldValidate: val !== "Other",
+                });
+              }}
+            >
+              <option value="">Select city…</option>
+              {CITY_OPTIONS.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+              <option value="Other">Other</option>
+            </select>
+            {cityChoice === "Other" && (
+              <input
+                type="text"
+                autoComplete="address-level2"
+                className="input-field mt-2"
+                placeholder="Enter your city"
+                {...register("city")}
+              />
+            )}
             {errors.city && <p className="mt-1 text-xs text-danger">{errors.city.message}</p>}
           </div>
         </div>

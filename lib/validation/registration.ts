@@ -17,6 +17,7 @@ export const registrationSchema = z.object({
     .min(2, "Please enter your full name")
     .max(80, "Name is too long"),
   categoryId: z.string().trim().min(1, "Please select a category"),
+  classYear: z.string().trim().min(1, "Please select your class / year"),
   institution: z
     .string()
     .trim()
@@ -26,7 +27,7 @@ export const registrationSchema = z.object({
     .string()
     .trim()
     .regex(whatsappRegex, "Enter a valid 10-digit WhatsApp number"),
-  eventId: z.string().trim().min(1, "Please select an event"),
+  event: z.string().trim().min(1, "Please select an event"),
   city: z.string().trim().min(2, "Please enter your city").max(80, "Too long"),
 });
 

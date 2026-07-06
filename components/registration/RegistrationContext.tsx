@@ -10,11 +10,11 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import type { Category, SiteContent } from "@/lib/types";
+import type { SiteContent } from "@/lib/types";
 import { RegistrationForm } from "./RegistrationForm";
 
 interface RegistrationContextValue {
-  /** Open the registration modal, optionally pre-selecting an event. */
+  /** Open the registration modal. */
   open: (eventId?: string) => void;
   close: () => void;
 }
@@ -30,19 +30,18 @@ export function useRegistration() {
 }
 
 export function RegistrationProvider({
-  categories,
   content,
   children,
 }: {
-  categories: Category[];
   content: SiteContent;
   children: ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [presetEventId, setPresetEventId] = useState<string | undefined>();
 
-  const open = useCallback((eventId?: string) => {
-    setPresetEventId(eventId);
+  // `eventId` is accepted for backwards compatibility with existing callers
+  // (e.g. RegisterButton on event pages) but the fest form manages its own
+  // category → event cascade, so it is not used to preselect.
+  const open = useCallback((_eventId?: string) => {
     setIsOpen(true);
   }, []);
 
@@ -82,12 +81,7 @@ export function RegistrationProvider({
               >
                 <X className="h-5 w-5" />
               </button>
-              <RegistrationForm
-                categories={categories}
-                content={content}
-                presetEventId={presetEventId}
-                onClose={close}
-              />
+              <RegistrationForm content={content} onClose={close} />
             </motion.div>
           </motion.div>
         )}

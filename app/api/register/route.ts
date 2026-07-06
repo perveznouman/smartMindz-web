@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { registrationSchema, normalizeWhatsapp } from "@/lib/validation/registration";
 import { getServiceClient } from "@/lib/supabase/server";
-import { getEvents, getSiteContent } from "@/lib/data";
+import { getSiteContent } from "@/lib/data";
+import { getFestCategory } from "@/lib/data/festEvents";
 import { getJoinLink, sendConfirmation } from "@/lib/notify/whatsapp";
 
 export const dynamic = "force-dynamic";
@@ -31,24 +32,32 @@ export async function POST(request: Request) {
   const data = parsed.data;
   const content = await getSiteContent();
 
-  // Resolve a friendly event title for the confirmation message.
-  const events = await getEvents();
-  const eventTitle =
-    events.find((e) => e.id === data.eventId)?.title ?? "your event";
+  // The submitted event is the competition name; use it directly.
+  const eventTitle = data.event || "your event";
+  const categoryName = getFestCategory(data.categoryId)?.name ?? data.categoryId;
 
   const whatsapp = normalizeWhatsapp(data.whatsapp);
   const supabase = getServiceClient();
 
   let persisted = false;
+  let registrationId: string | null = null;
   if (supabase) {
-    const { error } = await supabase.from("registrations").insert({
-      full_name: data.fullName,
-      category_id: data.categoryId,
-      institution: data.institution,
-      whatsapp,
-      event_id: data.eventId,
-      city: data.city,
-    });
+    // category_id / event_id are legacy FK columns; the fest cascade stores
+    // human-readable values in the text columns instead (see the migration in
+    // content/registration-fest.sql).
+    const { data: inserted, error } = await supabase
+      .from("registrations")
+      .insert({
+        full_name: data.fullName,
+        category_name: categoryName,
+        class_year: data.classYear,
+        institution: data.institution,
+        whatsapp,
+        event_name: data.event,
+        city: data.city,
+      })
+      .select("id")
+      .single();
     if (error) {
       console.error("Registration insert failed:", error.message);
       return NextResponse.json(
@@ -57,6 +66,7 @@ export async function POST(request: Request) {
       );
     }
     persisted = true;
+    registrationId = inserted?.id ?? null;
   } else {
     // No service key configured (e.g. local dev). Don't block the demo flow.
     console.warn("SUPABASE_SERVICE_ROLE_KEY not set — registration not persisted.");
@@ -67,6 +77,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     persisted,
+    registrationId,
     eventTitle,
     joinLink: getJoinLink(content),
     contact: content.whatsappContact,
