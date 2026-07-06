@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Reveal } from "@/components/ui/Reveal";
 
 /** A vertically-padded page section with generous spacing (120px, Bugatti-inspired). */
 export function Section({
@@ -32,7 +33,7 @@ export function SectionHeader({
   align?: "center" | "left";
 }) {
   return (
-    <div
+    <Reveal
       className={cn(
         "mb-16 max-w-3xl",
         align === "center" ? "mx-auto text-center" : "text-left",
@@ -43,6 +44,6 @@ export function SectionHeader({
       {subtitle && (
         <p className="body-lg mt-6 text-content-muted">{subtitle}</p>
       )}
-    </div>
+    </Reveal>
   );
 }

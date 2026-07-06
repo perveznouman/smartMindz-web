@@ -21,6 +21,7 @@ import type { SiteContent } from "@/lib/types";
 
 type SuccessState = {
   registrationId: string | null;
+  fullName: string;
   eventTitle: string;
   joinLink: string;
   contact: string;
@@ -86,7 +87,10 @@ export function RegistrationForm({
     [selectedCategory],
   );
 
+  const isOpenCategory = selectedCategory === "category-7";
+
   // Clear the event + class/year if they no longer belong to the new category.
+  // Also clear institution when switching to the open category.
   useEffect(() => {
     if (selectedEvent && !activeCategory?.events.includes(selectedEvent)) {
       setValue("event", "");
@@ -97,7 +101,10 @@ export function RegistrationForm({
     ) {
       setValue("classYear", "");
     }
-  }, [activeCategory, selectedEvent, selectedClassYear, setValue]);
+    if (isOpenCategory) {
+      setValue("institution", "");
+    }
+  }, [activeCategory, selectedEvent, selectedClassYear, isOpenCategory, setValue]);
 
   // Generate the UPI QR once the payment step is reached.
   useEffect(() => {
@@ -130,6 +137,7 @@ export function RegistrationForm({
       }
       setSuccess({
         registrationId: data.registrationId ?? null,
+        fullName: data.fullName ?? "Friend",
         eventTitle: data.eventTitle,
         joinLink: data.joinLink,
         contact: data.contact,
@@ -174,7 +182,8 @@ export function RegistrationForm({
         </div>
         <h3 className="mt-5 text-2xl font-bold font-display">You&apos;re all set! 🎉</h3>
         <p className="mt-2 text-sm text-content-muted">
-          Payment received for <strong className="text-content">{success.eventTitle}</strong>.
+          Hi <strong className="text-content">{success.fullName}</strong>! Payment received for{" "}
+          <strong className="text-content">{success.eventTitle}</strong>.
           Join our WhatsApp group for updates, schedule and event details.
         </p>
 
@@ -369,14 +378,13 @@ export function RegistrationForm({
           </div>
         </div>
 
-        <div>
-          <label htmlFor="institution" className="label-field">
-            School / Institution
-            <span className="ml-1 text-xs text-content-muted">(optional)</span>
-          </label>
-          <input id="institution" type="text" className="input-field" placeholder="School, college or organisation (or leave blank)" {...register("institution")} />
-          {errors.institution && <p className="mt-1 text-xs text-danger">{errors.institution.message}</p>}
-        </div>
+        {!isOpenCategory && (
+          <div>
+            <label htmlFor="institution" className="label-field">School / Institution</label>
+            <input id="institution" type="text" className="input-field" placeholder="School, college or organisation" {...register("institution")} />
+            {errors.institution && <p className="mt-1 text-xs text-danger">{errors.institution.message}</p>}
+          </div>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

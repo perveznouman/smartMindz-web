@@ -56,21 +56,27 @@ export default async function AboutPage() {
       {/* Quick facts */}
       <Section className="!py-12">
         <div className="mx-auto grid max-w-3xl gap-4 sm:grid-cols-3">
-          <div className="card p-5">
-            <MapPin className="h-6 w-6 text-brand" />
-            <h3 className="mt-3 text-sm font-semibold">Based in</h3>
-            <p className="mt-1 text-sm text-content-muted">{content.location}</p>
-          </div>
-          <div className="card p-5">
-            <Languages className="h-6 w-6 text-accent" />
-            <h3 className="mt-3 text-sm font-semibold">Languages</h3>
-            <p className="mt-1 text-sm text-content-muted">{content.languages.join(", ")}</p>
-          </div>
-          <div className="card p-5">
-            <Trophy className="h-6 w-6 text-highlight" />
-            <h3 className="mt-3 text-sm font-semibold">Rewards</h3>
-            <p className="mt-1 text-sm text-content-muted">{content.rewards.join(", ")}</p>
-          </div>
+          <Reveal direction="left">
+            <div className="card card-lift h-full p-5">
+              <MapPin className="h-6 w-6 text-brand" />
+              <h3 className="mt-3 text-sm font-semibold">Based in</h3>
+              <p className="mt-1 text-sm text-content-muted">{content.location}</p>
+            </div>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <div className="card card-lift h-full p-5">
+              <Languages className="h-6 w-6 text-accent" />
+              <h3 className="mt-3 text-sm font-semibold">Languages</h3>
+              <p className="mt-1 text-sm text-content-muted">{content.languages.join(", ")}</p>
+            </div>
+          </Reveal>
+          <Reveal direction="right" delay={0.2}>
+            <div className="card card-lift h-full p-5">
+              <Trophy className="h-6 w-6 text-highlight" />
+              <h3 className="mt-3 text-sm font-semibold">Rewards</h3>
+              <p className="mt-1 text-sm text-content-muted">{content.rewards.join(", ")}</p>
+            </div>
+          </Reveal>
         </div>
       </Section>
 
@@ -79,8 +85,12 @@ export default async function AboutPage() {
         <SectionHeader eyebrow="What we stand for" title="What makes us different" />
         <div className="grid gap-6 sm:grid-cols-2">
           {content.aboutHighlights.map((h, i) => (
-            <Reveal key={h.title} delay={i * 0.05}>
-              <div className="card h-full p-6">
+            <Reveal
+              key={h.title}
+              delay={(i % 2) * 0.1}
+              direction={i % 2 === 0 ? "left" : "right"}
+            >
+              <div className="card card-lift h-full p-6">
                 <h3 className="text-lg font-semibold font-display">{h.title}</h3>
                 <p className="mt-2 text-sm text-content-muted">{h.body}</p>
               </div>

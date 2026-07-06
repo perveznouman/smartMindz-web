@@ -17,6 +17,11 @@
     scroll-behavior: smooth;
   }
 
+  /* Anchored sections stop below the sticky navbar when scrolled to. */
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
+
   body {
     @apply bg-bg text-content antialiased;
     /* Prevent layout shift between themes before variables resolve. */
@@ -133,6 +138,26 @@
 
   .gradient-text {
     @apply bg-gradient-to-r from-brand via-accent to-highlight bg-clip-text text-transparent;
+  }
+
+  /* Slow shimmer sweep across the gradient — used on the hero title. */
+  .gradient-text-animated {
+    background-size: 200% auto;
+    animation: gradient-sweep 6s ease-in-out infinite alternate;
+  }
+
+  @keyframes gradient-sweep {
+    from {
+      background-position: 0% center;
+    }
+    to {
+      background-position: 100% center;
+    }
+  }
+
+  /* Hover lift for interactive cards. */
+  .card-lift {
+    @apply transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg;
   }
 
   /* Refined display text with increased letter-spacing (Bugatti-inspired) */

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { RegisterButton } from "@/components/registration/RegisterButton";
 import { Reveal } from "@/components/ui/Reveal";
+import { CountUp } from "@/components/ui/CountUp";
 import type { SiteContent } from "@/lib/types";
 
 export function Hero({ content }: { content: SiteContent }) {
@@ -23,7 +24,7 @@ export function Hero({ content }: { content: SiteContent }) {
         <div className="mx-auto max-w-3xl text-center">
           <Reveal>
             <h1 className="heading-xl mt-6">
-              <span className="gradient-text">{content.heroTitle}</span>
+              <span className="gradient-text gradient-text-animated">{content.heroTitle}</span>
             </h1>
           </Reveal>
 
@@ -39,7 +40,7 @@ export function Hero({ content }: { content: SiteContent }) {
                 Register for an event
                 <ArrowRight className="h-4 w-4" />
               </RegisterButton>
-              <Link href="/events" className="btn-outline w-full px-8 py-3 text-sm sm:w-auto">
+              <Link href="#events" className="btn-outline w-full px-8 py-3 text-sm sm:w-auto">
                 Explore events
               </Link>
             </div>
@@ -50,7 +51,7 @@ export function Hero({ content }: { content: SiteContent }) {
               {content.stats.map((stat) => (
                 <div key={stat.label} className="text-center">
                   <dt className="heading-md text-brand">
-                    {stat.value}
+                    <CountUp value={stat.value} />
                   </dt>
                   <dd className="mt-2 text-xs font-semibold uppercase tracking-wider text-content-muted">{stat.label}</dd>
                 </div>

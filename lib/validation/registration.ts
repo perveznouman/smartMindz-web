@@ -21,8 +21,9 @@ export const registrationSchema = z.object({
   institution: z
     .string()
     .trim()
-    .min(2, "Please enter your school / institution")
-    .max(120, "Too long"),
+    .max(120, "Too long")
+    .optional()
+    .or(z.literal("")),
   whatsapp: z
     .string()
     .trim()
