@@ -233,7 +233,7 @@ export function RegistrationForm({
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15">
           <CheckCircle2 className="h-8 w-8 text-success" />
         </div>
-        <h3 className="mt-5 text-2xl font-bold font-display">You&apos;re registered! 🎉</h3>
+        <h3 className="mt-5 text-2xl font-bold font-display">{success.fullName} registered! 🎉</h3>
         <p className="mt-2 text-sm text-content-muted">
           One last step for <strong className="text-content">{success.eventTitle}</strong> —
           pay the entry fee and upload your payment screenshot to confirm your spot
@@ -317,7 +317,7 @@ export function RegistrationForm({
   return (
     <div>
       <div className="mb-6">
-        <h3 className="text-2xl font-bold font-display">Register for an event</h3>
+        <h3 className="text-2xl font-bold font-display">Register for Independence Fest 2k26</h3>
         <p className="mt-1 text-sm text-content-muted">
           Pick your category, choose an event and you&apos;re in. It takes a minute.
         </p>
