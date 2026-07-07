@@ -4,6 +4,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { CtaBand } from "@/components/CtaBand";
 import { MapPin, Languages, Trophy } from "lucide-react";
 import { getSiteContent } from "@/lib/data";
+import { isRegistrationOpen } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "About",
@@ -99,7 +100,7 @@ export default async function AboutPage() {
         </div>
       </Section>
 
-      <CtaBand />
+      <CtaBand registrationOpen={isRegistrationOpen(content)} />
     </>
   );
 }

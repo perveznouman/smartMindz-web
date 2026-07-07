@@ -1,0 +1,35 @@
+-- Insert generic gallery photos (from WPhotos)
+-- These are shared across events, not tied to a specific event (event_id = NULL)
+-- All photos are stored in Supabase Storage under smartmindz/gallery/
+
+insert into gallery_photos (id, url, event_id, sort_order) values
+  ('wphotos-001', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/1.JPG', null, 1),
+  ('wphotos-002', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/2.JPG', null, 2),
+  ('wphotos-003', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/3.JPG', null, 3),
+  ('wphotos-005', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/5.JPG', null, 4),
+  ('wphotos-005-1', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/5_1.JPG', null, 5),
+  ('wphotos-007', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/7.JPG', null, 6),
+  ('wphotos-008', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/8.JPG', null, 7),
+  ('wphotos-012', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/12.JPG', null, 8),
+  ('wphotos-013', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/13.JPG', null, 9),
+  ('wphotos-017', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/17.JPG', null, 10),
+  ('wphotos-018', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/18.JPG', null, 11),
+  ('wphotos-019', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/19.JPG', null, 12),
+  ('wphotos-020', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/20.JPG', null, 13),
+  ('wphotos-021', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/21.JPG', null, 14),
+  ('wphotos-024', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/24.JPG', null, 15),
+  ('wphotos-025', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/25.JPG', null, 16),
+  ('wphotos-029', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/29.JPG', null, 17),
+  ('wphotos-030', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/30.JPG', null, 18),
+  ('wphotos-031', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/31.JPG', null, 19),
+  ('wphotos-032', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/32.JPG', null, 20),
+  ('wphotos-035', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/35.JPG', null, 21),
+  ('wphotos-036', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/36.JPG', null, 22),
+  ('wphotos-037', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/37.JPG', null, 23),
+  ('wphotos-038', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/38.JPG', null, 24),
+  ('wphotos-img0399', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/IMG_0399.JPG', null, 25),
+  ('wphotos-img0428', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/IMG_0428.JPG', null, 26),
+  ('wphotos-img0488', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/IMG_0488.JPG', null, 27),
+  ('wphotos-img0517', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/IMG_0517.JPG', null, 28),
+  ('wphotos-img0920', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/IMG_0920.JPG', null, 29),
+  ('wphotos-img0934', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/IMG_0934.JPG', null, 30);

@@ -5,7 +5,13 @@ import { RegisterButton } from "@/components/registration/RegisterButton";
 import { formatEventDate } from "@/lib/utils";
 import type { EventItem } from "@/lib/types";
 
-export function EventCard({ event }: { event: EventItem }) {
+export function EventCard({
+  event,
+  registrationOpen = true,
+}: {
+  event: EventItem;
+  registrationOpen?: boolean;
+}) {
   const isUpcoming = event.status === "upcoming";
 
   return (
@@ -55,8 +61,12 @@ export function EventCard({ event }: { event: EventItem }) {
 
         <div className="mt-5 flex items-center gap-3">
           {isUpcoming ? (
-            <RegisterButton eventId={event.id} className="btn-primary text-sm">
-              Register
+            <RegisterButton
+              eventId={event.id}
+              disabled={!registrationOpen}
+              className="btn-primary text-sm"
+            >
+              {registrationOpen ? "Register" : "Closed"}
             </RegisterButton>
           ) : null}
           <Link

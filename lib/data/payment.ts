@@ -1,38 +1,38 @@
 /**
- * Payment configuration for event registration.
- *
- * Edit these values to change the fee, payee, or UPI account. The payment step
- * of the registration form builds a UPI deep link + QR code from this.
+ * Payment configuration — sourced from Supabase `site_content` (see
+ * lib/types.ts SiteContent). Change the fee, payee, or UPI account from the
+ * dashboard; no redeploy needed if a UPI VPA gets blocked.
  */
+import type { SiteContent } from "@/lib/types";
 
-export const PAYMENT = {
-  /** Entry fee per event, in rupees. */
-  amount: 1,
-  /** UPI VPA that receives the payment. */
-  upiId: "perveznouman@okicici",
-  /** Payee name shown in the UPI app. */
-  payeeName: "Nouman Pervez",
-  /** Note attached to the transaction. */
-  note: "SmartMindz Registration",
-};
+export interface PaymentConfig {
+  amount: number;
+  upiId: string;
+  payeeName: string;
+  note: string;
+}
+
+export function getPaymentConfig(content: SiteContent): PaymentConfig {
+  return {
+    amount: content.paymentAmount,
+    upiId: content.paymentUpiId,
+    payeeName: content.paymentPayeeName,
+    note: content.paymentNote,
+  };
+}
 
 /**
  * Build a UPI deep link (`upi://pay?...`). On a phone this opens GPay / PhonePe
  * / Paytm etc. with the amount pre-filled; encoded as a QR it can be scanned
  * from any UPI app.
  */
-export function buildUpiLink({
-  amount = PAYMENT.amount,
-  upiId = PAYMENT.upiId,
-  payeeName = PAYMENT.payeeName,
-  note = PAYMENT.note,
-}: Partial<typeof PAYMENT> = {}): string {
+export function buildUpiLink(config: PaymentConfig): string {
   const params = new URLSearchParams({
-    pa: upiId,
-    pn: payeeName,
-    am: String(amount),
+    pa: config.upiId,
+    pn: config.payeeName,
+    am: String(config.amount),
     cu: "INR",
-    tn: note,
+    tn: config.note,
   });
   return `upi://pay?${params.toString()}`;
 }

@@ -21,10 +21,6 @@ create table if not exists events (
   location    text,
   status      text not null default 'upcoming' check (status in ('upcoming','past')),
   cover_url   text,
-  -- Registration control: toggle `registration_open` off, or set a past
-  -- `registration_closes_at`, to close signups without a redeploy.
-  registration_open      boolean not null default true,
-  registration_closes_at timestamptz,
   created_at  timestamptz not null default now()
 );
 
@@ -88,8 +84,6 @@ create table if not exists registrations (
 );
 
 -- Safe to rerun on a DB that already has the table without these columns.
-alter table events add column if not exists registration_open boolean not null default true;
-alter table events add column if not exists registration_closes_at timestamptz;
 alter table registrations add column if not exists category_name text;
 alter table registrations add column if not exists class_year   text;
 alter table registrations add column if not exists event_name   text;
@@ -196,6 +190,18 @@ insert into site_content (key, value) values
   ('youtube', '{"label":"YouTube","href":"https://www.youtube.com/@smartmindz_vnb","handle":"@smartmindz_vnb"}'),
   ('location', '"Vaniyambadi, Tamil Nadu, India"')
 on conflict (key) do update set value = excluded.value;
+
+-- Global registration on/off switch (site currently runs one shared
+-- registration form, not per-event — see lib/utils.ts isRegistrationOpen).
+-- `do nothing` on conflict: seeded once as the default, then this file can be
+-- rerun safely without stomping a toggle you later flip from the dashboard.
+-- registrationClosesAt is intentionally NOT seeded here — leaving the key
+-- absent is equivalent to "no close date" and avoids a jsonb NOT NULL trap
+-- (a real JSON null still needs a non-null jsonb value, e.g. '"null"'::jsonb
+-- won't work either — just add the key manually in the dashboard when needed).
+insert into site_content (key, value) values
+  ('registrationOpen', 'true')
+on conflict (key) do nothing;
 
 -- NOTE: gallery_photos rows are populated by `npm run upload-gallery`, which
 -- compresses the images and uploads them to Supabase Storage.

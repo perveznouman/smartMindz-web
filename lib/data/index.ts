@@ -38,9 +38,6 @@ type EventRow = {
   location: string | null;
   status: string;
   cover_url: string | null;
-  registration_open: boolean;
-  registration_closes_at: string | null;
-  event_categories?: { category_id: string }[] | null;
 };
 
 function mapEvent(row: EventRow): EventItem {
@@ -53,9 +50,7 @@ function mapEvent(row: EventRow): EventItem {
     location: row.location,
     status: row.status === "past" ? "past" : "upcoming",
     coverUrl: row.cover_url,
-    registrationOpen: row.registration_open ?? true,
-    registrationClosesAt: row.registration_closes_at,
-    categoryIds: (row.event_categories ?? []).map((c) => c.category_id),
+    categoryIds: [],
   };
 }
 
@@ -91,6 +86,28 @@ function normalizeSiteContent(merged: Record<string, unknown>): SiteContent {
     languages: asArray(merged.languages, fallbackSiteContent.languages),
     rewards: asArray(merged.rewards, fallbackSiteContent.rewards),
     stats: asArray(merged.stats, fallbackSiteContent.stats),
+    registrationOpen:
+      typeof merged.registrationOpen === "boolean"
+        ? merged.registrationOpen
+        : fallbackSiteContent.registrationOpen,
+    registrationClosesAt:
+      typeof merged.registrationClosesAt === "string" ? merged.registrationClosesAt : null,
+    paymentAmount:
+      typeof merged.paymentAmount === "number"
+        ? merged.paymentAmount
+        : fallbackSiteContent.paymentAmount,
+    paymentUpiId:
+      typeof merged.paymentUpiId === "string" && merged.paymentUpiId
+        ? merged.paymentUpiId
+        : fallbackSiteContent.paymentUpiId,
+    paymentPayeeName:
+      typeof merged.paymentPayeeName === "string" && merged.paymentPayeeName
+        ? merged.paymentPayeeName
+        : fallbackSiteContent.paymentPayeeName,
+    paymentNote:
+      typeof merged.paymentNote === "string" && merged.paymentNote
+        ? merged.paymentNote
+        : fallbackSiteContent.paymentNote,
   };
 }
 
@@ -128,7 +145,7 @@ export const getCategories = cache(async (): Promise<Category[]> => {
 });
 
 const EVENT_SELECT =
-  "id, slug, title, description, event_date, location, status, cover_url, registration_open, registration_closes_at, event_categories(category_id)";
+  "id, slug, title, description, event_date, location, status, cover_url";
 
 export const getEvents = cache(async (): Promise<EventItem[]> => {
   const supabase = getServerReadClient();

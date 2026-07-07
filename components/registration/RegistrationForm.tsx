@@ -16,7 +16,7 @@ import {
 } from "@/lib/validation/registration";
 import QRCode from "qrcode";
 import { festCategories, getFestCategory } from "@/lib/data/festEvents";
-import { PAYMENT, buildUpiLink } from "@/lib/data/payment";
+import { getPaymentConfig, buildUpiLink } from "@/lib/data/payment";
 import type { SiteContent } from "@/lib/types";
 
 type SuccessState = {
@@ -46,6 +46,7 @@ export function RegistrationForm({
   content: SiteContent;
   onClose?: () => void;
 }) {
+  const payment = useMemo(() => getPaymentConfig(content), [content]);
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState<SuccessState | null>(null);
   // Tracks the City dropdown selection; "Other" reveals the free-text input.
@@ -109,10 +110,10 @@ export function RegistrationForm({
   // Generate the UPI QR once the payment step is reached.
   useEffect(() => {
     if (!success || paymentUploaded) return;
-    QRCode.toDataURL(buildUpiLink(), { width: 220, margin: 1 })
+    QRCode.toDataURL(buildUpiLink(payment), { width: 220, margin: 1 })
       .then(setQrDataUrl)
       .catch(() => setQrDataUrl(null));
-  }, [success, paymentUploaded]);
+  }, [success, paymentUploaded, payment]);
 
   // Generate the WhatsApp group QR once payment is done.
   useEffect(() => {
@@ -242,7 +243,7 @@ export function RegistrationForm({
         <div className="mt-5 rounded-2xl border border-brand/30 bg-brand/5 p-4 text-center">
           <p className="text-sm text-content-muted">
             Amount to pay
-            <span className="ml-2 text-lg font-bold text-brand">₹{PAYMENT.amount}</span>
+            <span className="ml-2 text-lg font-bold text-brand">₹{payment.amount}</span>
             <span className="ml-1 text-xs text-content-muted">per event</span>
           </p>
 
@@ -250,27 +251,27 @@ export function RegistrationForm({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={qrDataUrl}
-              alt={`Scan to pay ₹${PAYMENT.amount} via UPI`}
+              alt={`Scan to pay ₹${payment.amount} via UPI`}
               className="mx-auto mt-3 h-44 w-44 rounded-xl bg-white p-2"
             />
           )}
 
           <p className="mt-2 text-xs text-content-muted">
             Scan with any UPI app · UPI ID:{" "}
-            <span className="font-medium text-content">{PAYMENT.upiId}</span>
+            <span className="font-medium text-content">{payment.upiId}</span>
           </p>
 
           <a
-            href={buildUpiLink()}
+            href={buildUpiLink(payment)}
             className="btn-outline mt-3 w-full px-4 py-2 text-sm sm:hidden"
           >
-            Pay ₹{PAYMENT.amount} in a UPI app
+            Pay ₹{payment.amount} in a UPI app
           </a>
 
           <p className="mt-2 text-xs text-content-muted">
             If the button doesn't open your UPI app, open your preferred UPI app (Google Pay,
-            PhonePe, Paytm) and send <strong>₹{PAYMENT.amount}</strong> to{" "}
-            <strong>{PAYMENT.upiId}</strong>
+            PhonePe, Paytm) and send <strong>₹{payment.amount}</strong> to{" "}
+            <strong>{payment.upiId}</strong>
           </p>
         </div>
 

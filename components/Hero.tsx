@@ -3,9 +3,11 @@ import { ArrowRight } from "lucide-react";
 import { RegisterButton } from "@/components/registration/RegisterButton";
 import { Reveal } from "@/components/ui/Reveal";
 import { CountUp } from "@/components/ui/CountUp";
+import { isRegistrationOpen } from "@/lib/utils";
 import type { SiteContent } from "@/lib/types";
 
 export function Hero({ content }: { content: SiteContent }) {
+  const regOpen = isRegistrationOpen(content);
   return (
     <section className="relative overflow-hidden">
       {/* Soft gradient backdrop driven entirely by theme tokens. */}
@@ -36,9 +38,12 @@ export function Hero({ content }: { content: SiteContent }) {
 
           <Reveal delay={0.15}>
             <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <RegisterButton className="btn-primary w-full px-8 py-3 text-sm sm:w-auto">
-                Register for an event
-                <ArrowRight className="h-4 w-4" />
+              <RegisterButton
+                disabled={!regOpen}
+                className="btn-primary w-full px-8 py-3 text-sm sm:w-auto"
+              >
+                {regOpen ? "Register for an event" : "Registrations closed"}
+                {regOpen && <ArrowRight className="h-4 w-4" />}
               </RegisterButton>
               <Link href="#events" className="btn-outline w-full px-8 py-3 text-sm sm:w-auto">
                 Explore events

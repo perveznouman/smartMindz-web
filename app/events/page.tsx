@@ -4,7 +4,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { EventCard } from "@/components/EventCard";
 import { Gallery } from "@/components/Gallery";
 import { CtaBand } from "@/components/CtaBand";
-import { getEvents, getGallery } from "@/lib/data";
+import { getEvents, getGallery, getSiteContent } from "@/lib/data";
+import { isRegistrationOpen } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -12,9 +13,14 @@ export const metadata: Metadata = {
 };
 
 export default async function EventsPage() {
-  const [events, gallery] = await Promise.all([getEvents(), getGallery()]);
+  const [events, gallery, content] = await Promise.all([
+    getEvents(),
+    getGallery(),
+    getSiteContent(),
+  ]);
   const upcoming = events.filter((e) => e.status === "upcoming");
   const past = events.filter((e) => e.status === "past");
+  const regOpen = isRegistrationOpen(content);
 
   return (
     <>
@@ -31,7 +37,7 @@ export default async function EventsPage() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {upcoming.map((e) => (
                 <Reveal key={e.id}>
-                  <EventCard event={e} />
+                  <EventCard event={e} registrationOpen={regOpen} />
                 </Reveal>
               ))}
             </div>
@@ -44,7 +50,7 @@ export default async function EventsPage() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {past.map((e) => (
                 <Reveal key={e.id}>
-                  <EventCard event={e} />
+                  <EventCard event={e} registrationOpen={regOpen} />
                 </Reveal>
               ))}
             </div>
@@ -63,7 +69,7 @@ export default async function EventsPage() {
         </Section>
       )}
 
-      <CtaBand />
+      <CtaBand registrationOpen={regOpen} />
     </>
   );
 }

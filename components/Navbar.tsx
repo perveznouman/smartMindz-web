@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useRegistration } from "@/components/registration/RegistrationContext";
-import { cn } from "@/lib/utils";
+import { cn, isRegistrationOpen } from "@/lib/utils";
 import type { SiteContent } from "@/lib/types";
 
 // Nav links scroll to home-page sections (single-page feel). `match` still
@@ -26,6 +26,7 @@ const SECTION_IDS = ["about", "events", "team", "contact"];
 export function Navbar({ content }: { content: SiteContent }) {
   const pathname = usePathname();
   const { open } = useRegistration();
+  const regOpen = isRegistrationOpen(content);
   const [mobileOpen, setMobileOpen] = useState(false);
   // Which anchor is currently in view; empty string means "Home" (top of page).
   const [activeSection, setActiveSection] = useState<string>("");
@@ -142,10 +143,14 @@ export function Navbar({ content }: { content: SiteContent }) {
           <ThemeToggle />
           <button
             type="button"
-            onClick={() => open()}
-            className="btn-primary hidden sm:inline-flex"
+            onClick={() => regOpen && open()}
+            disabled={!regOpen}
+            className={cn(
+              "btn-primary hidden sm:inline-flex",
+              !regOpen && "opacity-50 cursor-not-allowed",
+            )}
           >
-            Register
+            {regOpen ? "Register" : "Registrations closed"}
           </button>
           <button
             type="button"
@@ -177,12 +182,14 @@ export function Navbar({ content }: { content: SiteContent }) {
             <button
               type="button"
               onClick={() => {
+                if (!regOpen) return;
                 setMobileOpen(false);
                 open();
               }}
-              className="btn-primary mt-2 w-full"
+              disabled={!regOpen}
+              className={cn("btn-primary mt-2 w-full", !regOpen && "opacity-50 cursor-not-allowed")}
             >
-              Register for an event
+              {regOpen ? "Register for an event" : "Registrations closed"}
             </button>
           </div>
         </div>

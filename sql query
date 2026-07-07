@@ -1,0 +1,174 @@
+-- ============================================================================
+-- SmartMindz — Supabase schema + seed
+-- Run this in the Supabase SQL editor to set up the database.
+-- ============================================================================
+
+-- ---- Tables ----------------------------------------------------------------
+
+create table if not exists events (
+  id          text primary key,
+  slug        text not null unique,
+  title       text not null,
+  description text,
+  event_date  date,
+  location    text,
+  status      text not null default 'upcoming' check (status in ('upcoming','past')),
+  cover_url   text,
+  created_at  timestamptz not null default now()
+);
+
+create table if not exists team_members (
+  id         text primary key,
+  name       text not null,
+  role       text not null,
+  photo_url  text,
+  sort_order int not null default 0
+);
+
+create table if not exists gallery_photos (
+  id         text primary key,
+  url        text not null,
+  thumb_url  text,
+  caption    text,
+  event_id   text references events(id) on delete set null,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists site_content (
+  key   text primary key,
+  value jsonb not null
+);
+
+create table if not exists results (
+  id        uuid primary key default gen_random_uuid(),
+  event_id  text not null references events(id) on delete cascade,
+  kind      text not null default 'result' check (kind in ('rule','result')),
+  title     text not null,
+  body      text,
+  file_url  text
+);
+
+create table if not exists registrations (
+  id            uuid primary key default gen_random_uuid(),
+  full_name     text not null,
+  category_id   text,
+  category_name text,
+  class_year    text,
+  institution   text,
+  whatsapp      text not null,
+  event_id      text references events(id),
+  event_name    text,
+  city          text,
+  payment_url   text,
+  created_at    timestamptz not null default now()
+);
+
+-- ---- Indexes ---------------------------------------------------------------
+
+create index if not exists idx_gallery_event       on gallery_photos(event_id);
+create index if not exists idx_registrations_event on registrations(event_id);
+create index if not exists idx_results_event_kind  on results(event_id, kind);
+
+-- ---- Row Level Security ----------------------------------------------------
+
+alter table events           enable row level security;
+alter table team_members     enable row level security;
+alter table gallery_photos   enable row level security;
+alter table site_content     enable row level security;
+alter table results          enable row level security;
+alter table registrations    enable row level security;
+
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'events','team_members','gallery_photos','site_content','results'
+  ] loop
+    execute format(
+      'drop policy if exists %I on %I; create policy %I on %I for select to anon, authenticated using (true);',
+      t || '_public_read', t, t || '_public_read', t
+    );
+  end loop;
+end $$;
+
+-- ---- Seed: events ---------------------------------------------------------
+
+insert into events (id, slug, title, description, event_date, location, status, cover_url) values
+  ('evt-independce-fest-2026','indipendence-fest-2027','Independance Fiesta 2k26',
+   'Full of talents — our upcoming celebration of creativity and skill across speeches, writing and the arts, with guaranteed certificates, trophies and grand felicitations.',
+   '2026-08-15','Vaniyambadi, Tamil Nadu','upcoming',
+   'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/banners/IndFiesta27banner.jpeg'),
+  ('evt-republic-fest-2026','republic-fest-2026','Republic Fest 2026',
+   'Our flagship celebration of talent — 1000+ vibrant participants across speeches, debates, essays, posters, drawing and calligraphy.',
+   '2026-01-26','Vaniyambadi, Tamil Nadu','past',
+   'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/banners/RepublicFest26banner.jpg'),
+  ('mindspark-2025','mindspark-2025','MindSpark 2025',
+   'Where it all came alive — packed halls, fierce competition and unforgettable performances across every category.',
+   '2025-01-26','Vaniyambadi, Tamil Nadu','past',
+   'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/banners/Mindsparkbanner.jpg')
+on conflict (id) do update set
+  slug = excluded.slug, title = excluded.title, description = excluded.description,
+  event_date = excluded.event_date, location = excluded.location,
+  status = excluded.status, cover_url = excluded.cover_url;
+
+-- ---- Seed: team -----------------------------------------------------------
+
+insert into team_members (id, name, role, photo_url, sort_order) values
+  ('tm-1','H. Abdul Aleem','Software Engineer, International Certified Trainer, Teacher, Education & Career Counselor','https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/team/abdul-aleem.jpeg',1),
+  ('tm-2','Nouman Pervez','Full-Stack Mobile and Web Developer, SmartMindz Coordinator','https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/team/nouman-pervez.JPG',2),
+  ('tm-3','Aaqib Ameen','IT Project Manager, Coordinator SmartMindz, Committed to Organizing Student-Focused Initiatives, Mentoring Emerging Talent, and Fostering Innovation through Collaborative Learning and Leadership','https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/team/aaqib-ameen.jpeg',3),
+  ('tm-4','C. N. Khanitha Mariam','Parenting Coach (guide2motherhood), Nutrition Counsellor and Certified Phonics Trainer','https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/team/khanita-mariam.jpeg',4),
+  ('tm-5','Sajid Basha','Configuration Analyst, SmartMindz coordinator','https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/team/sajid-basha.jpeg',5),
+  ('tm-6','K Mohammed Sadiq','QA Analyst, SmartMindz coordinator','https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/team/sadiq.jpeg',6)
+on conflict (id) do nothing;
+
+-- ---- Seed: site content ---------------------------------------------------
+
+insert into site_content (key, value) values
+  ('tagline', '"Where Every Talent Shines"'),
+  ('whatsappContact', '"+91-9600707610"'),
+  ('whatsappGroupLink', '"https://wa.me/919600707610"'),
+  ('instagram', '{"label":"Instagram","href":"https://instagram.com/smartmindz_vnb","handle":"@smartmindz_vnb"}'),
+  ('youtube', '{"label":"YouTube","href":"https://www.youtube.com/@smartmindz_vnb","handle":"@smartmindz_vnb"}'),
+  ('location', '"Vaniyambadi, Tamil Nadu, India"'),
+  ('registrationOpen', 'true'),
+  ('paymentAmount', '1'),
+  ('paymentUpiId', '"perveznouman@okicici"'),
+  ('paymentPayeeName', '"Nouman Pervez"'),
+  ('paymentNote', '"SmartMindz Registration"')
+on conflict (key) do nothing;
+
+-- ---- Seed: gallery photos -------------------------------------------------
+
+insert into gallery_photos (id, url, thumb_url, event_id, sort_order) values
+  ('wphotos-001', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-1.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-1.webp', null, 1),
+  ('wphotos-002', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-2.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-2.webp', null, 2),
+  ('wphotos-003', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-3.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-3.webp', null, 3),
+  ('wphotos-005', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-5.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-5.webp', null, 4),
+  ('wphotos-007', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-7.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-7.webp', null, 5),
+  ('wphotos-008', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-8.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-8.webp', null, 6),
+  ('wphotos-012', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-12.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-12.webp', null, 7),
+  ('wphotos-013', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-13.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-13.webp', null, 8),
+  ('wphotos-017', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-17.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-17.webp', null, 9),
+  ('wphotos-018', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-18.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-18.webp', null, 10),
+  ('wphotos-019', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-19.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-19.webp', null, 11),
+  ('wphotos-020', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-20.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-20.webp', null, 12),
+  ('wphotos-021', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-21.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-21.webp', null, 13),
+  ('wphotos-024', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-24.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-24.webp', null, 14),
+  ('wphotos-025', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-25.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-25.webp', null, 15),
+  ('wphotos-029', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-29.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-29.webp', null, 16),
+  ('wphotos-030', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-30.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-30.webp', null, 17),
+  ('wphotos-031', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-31.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-31.webp', null, 18),
+  ('wphotos-032', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-32.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-32.webp', null, 19),
+  ('wphotos-035', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-35.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-35.webp', null, 20),
+  ('wphotos-036', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-36.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-36.webp', null, 21),
+  ('wphotos-037', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-37.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-37.webp', null, 22),
+  ('wphotos-038', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-38.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-38.webp', null, 23),
+  ('wphotos-img0399', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-IMG_0399.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-IMG_0399.webp', null, 24),
+  ('wphotos-img0428', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-IMG_0428.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-IMG_0428.webp', null, 25),
+  ('wphotos-img0488', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-IMG_0488.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-IMG_0488.webp', null, 26),
+  ('wphotos-img0517', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-IMG_0517.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-IMG_0517.webp', null, 27),
+  ('wphotos-img0920', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-IMG_0920.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-IMG_0920.webp', null, 28),
+  ('wphotos-img0934', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/full/WPhotos-IMG_0934.webp', 'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/gallery/thumb/WPhotos-IMG_0934.webp', null, 29)
+on conflict (id) do nothing;

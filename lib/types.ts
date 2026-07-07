@@ -22,8 +22,6 @@ export interface EventItem {
   coverUrl: string | null;
   /** Category ids this event is open to (drives the dependent dropdown). */
   categoryIds: string[];
-  registrationOpen: boolean;
-  registrationClosesAt: string | null;
 }
 
 export interface TeamMember {
@@ -80,6 +78,20 @@ export interface SiteContent {
   whatsappContact: string;
   whatsappGroupLink: string;
   email: string | null;
+  /** Global registration on/off switch — the site currently runs one shared
+   * registration form (not per-event), so this single flag controls every
+   * "Register" button site-wide. Toggle from Supabase, no redeploy needed. */
+  registrationOpen: boolean;
+  /** Optional auto-close instant (ISO string). Registration is treated as
+   * closed once this passes, even if registrationOpen is still true. */
+  registrationClosesAt: string | null;
+  /** Payment details — editable from Supabase so a blocked UPI or a changed
+   * fee can be swapped instantly without a redeploy. All four back the UPI
+   * QR + link shown on the registration success step. */
+  paymentAmount: number;
+  paymentUpiId: string;
+  paymentPayeeName: string;
+  paymentNote: string;
 }
 
 export interface RegistrationInput {

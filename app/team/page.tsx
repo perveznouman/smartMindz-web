@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Section, SectionHeader } from "@/components/ui/Section";
 import { TeamGrid } from "@/components/TeamGrid";
 import { CtaBand } from "@/components/CtaBand";
-import { getTeam } from "@/lib/data";
+import { getSiteContent, getTeam } from "@/lib/data";
+import { isRegistrationOpen } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Team",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TeamPage() {
-  const team = await getTeam();
+  const [team, content] = await Promise.all([getTeam(), getSiteContent()]);
 
   return (
     <>
@@ -22,7 +23,7 @@ export default async function TeamPage() {
         />
         <TeamGrid members={team} />
       </Section>
-      <CtaBand />
+      <CtaBand registrationOpen={isRegistrationOpen(content)} />
     </>
   );
 }

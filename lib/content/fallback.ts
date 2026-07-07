@@ -31,73 +31,58 @@ export const fallbackCategories: Category[] = [
 
 export const fallbackEvents: EventItem[] = [
   {
+    id: "evt-independce-fest-2026",
+    slug: "indipendence-fest-2027",
+    title: "Independance Fiesta 2k26",
+    description:
+      "Full of talents — our upcoming celebration of creativity and skill across speeches, writing and the arts, with guaranteed certificates, trophies and grand felicitations.",
+    eventDate: "2026-08-15",
+    location: "Vaniyambadi, Tamil Nadu",
+    status: "upcoming",
+    coverUrl:
+      "https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/banners/IndFiesta27banner.jpeg",
+    categoryIds: [],
+  },
+  {
     id: "evt-republic-fest-2026",
     slug: "republic-fest-2026",
     title: "Republic Fest 2026",
     description:
-      "Our flagship celebration of talent — 1000+ vibrant participants across speeches, debates, essays, posters, drawing and calligraphy. Compete, learn and shine with guaranteed certificates, trophies and grand felicitations.",
+      "Our flagship celebration of talent — 1000+ vibrant participants across speeches, debates, essays, posters, drawing and calligraphy.",
     eventDate: "2026-01-26",
     location: "Vaniyambadi, Tamil Nadu",
-    status: "upcoming",
-    coverUrl: "/gallery/sample-1.jpg",
-    // Open to everyone for the flagship fest.
-    categoryIds: fallbackCategories.map((c) => c.id),
+    status: "past",
+    coverUrl:
+      "https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/banners/RepublicFest26banner.jpg",
+    categoryIds: [],
   },
   {
-    id: "evt-speech-junior-2026",
-    slug: "junior-speech-championship-2026",
-    title: "Junior Speech Championship",
+    id: "mindspark-2025",
+    slug: "mindspark-2025",
+    title: "MindSpark 2025",
     description:
-      "A multilingual speech competition for our youngest stars in Tamil, Hindi, Urdu and English.",
-    eventDate: "2026-02-15",
-    location: "Online",
-    status: "upcoming",
-    coverUrl: "/gallery/sample-2.jpg",
-    categoryIds: ["cat-1", "cat-2", "cat-3", "cat-4", "cat-5"],
-  },
-  {
-    id: "evt-calligraphy-2026",
-    slug: "calligraphy-masters-2026",
-    title: "Calligraphy Masters",
-    description:
-      "Showcase the art of beautiful writing across scripts and languages.",
-    eventDate: "2026-03-10",
-    location: "Vaniyambadi, Tamil Nadu",
-    status: "upcoming",
-    coverUrl: "/gallery/sample-3.jpg",
-    categoryIds: ["cat-6", "cat-7", "cat-college", "cat-professional", "cat-homemaker"],
-  },
-  {
-    id: "evt-republic-fest-2025",
-    slug: "republic-fest-2025",
-    title: "Republic Fest 2025",
-    description:
-      "Where it all came alive last year — packed halls, fierce competition and unforgettable performances across every category.",
+      "Where it all came alive — packed halls, fierce competition and unforgettable performances across every category.",
     eventDate: "2025-01-26",
     location: "Vaniyambadi, Tamil Nadu",
     status: "past",
-    coverUrl: "/gallery/sample-4.jpg",
-    categoryIds: fallbackCategories.map((c) => c.id),
+    coverUrl:
+      "https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/banners/Mindsparkbanner.jpg",
+    categoryIds: [],
   },
 ];
 
 export const fallbackTeam: TeamMember[] = [
-  { id: "tm-1", name: "Abdul Aleem", role: "Software Engineer", photoUrl: null, sortOrder: 1 },
-  { id: "tm-2", name: "Aaqib Ameen", role: "Software Engineer", photoUrl: null, sortOrder: 2 },
-  { id: "tm-3", name: "Khanita Mariam", role: "Parenting Coach", photoUrl: null, sortOrder: 3 },
-  { id: "tm-4", name: "Nouman Pervez", role: "Software Engineer", photoUrl: null, sortOrder: 4 },
-  { id: "tm-5", name: "Sajid Basha", role: "Software Engineer", photoUrl: null, sortOrder: 5 },
+  { id: "tm-1", name: "H. Abdul Aleem", role: "Software Engineer, International Certified Trainer, Teacher, Education & Career Counselor", photoUrl: null, sortOrder: 1 },
+  { id: "tm-2", name: "Nouman Pervez", role: "Full-Stack Mobile and Web Developer, SmartMindz Coordinator", photoUrl: null, sortOrder: 2 },
+  { id: "tm-3", name: "Aaqib Ameen", role: "IT Project Manager, Coordinator SmartMindz", photoUrl: null, sortOrder: 3 },
+  { id: "tm-4", name: "C. N. Khanitha Mariam", role: "Parenting Coach (guide2motherhood), Nutrition Counsellor and Certified Phonics Trainer", photoUrl: null, sortOrder: 4 },
+  { id: "tm-5", name: "Sajid Basha", role: "Configuration Analyst, SmartMindz coordinator", photoUrl: null, sortOrder: 5 },
+  { id: "tm-6", name: "K Mohammed Sadiq", role: "QA Analyst, SmartMindz coordinator", photoUrl: null, sortOrder: 6 },
 ];
 
-/** Offline sample gallery (the full set lives in Supabase via the upload script). */
-export const fallbackGallery: GalleryPhoto[] = Array.from({ length: 16 }, (_, i) => ({
-  id: `ph-${i + 1}`,
-  url: `/gallery/sample-${i + 1}.jpg`,
-  thumbUrl: `/gallery/sample-${i + 1}.jpg`,
-  caption: null,
-  eventId: i % 2 === 0 ? "evt-republic-fest-2025" : null,
-  sortOrder: i + 1,
-}));
+/** Fallback gallery is empty — the real photos live in Supabase Storage
+ * (see the gallery_photos seed in `sql query`). */
+export const fallbackGallery: GalleryPhoto[] = [];
 
 export const fallbackSiteContent: SiteContent = {
   orgName: "SmartMindz",
@@ -143,4 +128,10 @@ export const fallbackSiteContent: SiteContent = {
   // Until then we fall back to a direct chat with the contact number.
   whatsappGroupLink: "https://wa.me/919600707610",
   email: null,
+  registrationOpen: true,
+  registrationClosesAt: null,
+  paymentAmount: 1,
+  paymentUpiId: "perveznouman@okicici",
+  paymentPayeeName: "Nouman Pervez",
+  paymentNote: "SmartMindz Registration",
 };

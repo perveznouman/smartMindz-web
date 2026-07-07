@@ -7,8 +7,8 @@ import { Section } from "@/components/ui/Section";
 import { Gallery } from "@/components/Gallery";
 import { RegisterButton } from "@/components/registration/RegisterButton";
 import { CtaBand } from "@/components/CtaBand";
-import { getEventBySlug, getGallery, getResults } from "@/lib/data";
-import { formatEventDate } from "@/lib/utils";
+import { getEventBySlug, getGallery, getResults, getSiteContent } from "@/lib/data";
+import { formatEventDate, isRegistrationOpen } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -28,18 +28,16 @@ export default async function EventDetailPage({ params }: Props) {
   const event = await getEventBySlug(slug);
   if (!event) notFound();
 
-  const [gallery, results] = await Promise.all([
+  const [gallery, results, content] = await Promise.all([
     getGallery(event.id),
     getResults(event.id),
+    getSiteContent(),
   ]);
 
   const isUpcoming = event.status === "upcoming";
-  const now = new Date();
-  const closesAt = event.registrationClosesAt ? new Date(event.registrationClosesAt) : null;
-  const isRegistrationOpen =
-    event.registrationOpen &&
-    isUpcoming &&
-    (!closesAt || now < closesAt);
+  // Registration is one shared form for the site (not per-event), so it's
+  // gated by the global site_content toggle, not this event's own columns.
+  const regOpen = isUpcoming && isRegistrationOpen(content);
   const rules = results.filter((r) => r.kind === "rule");
   const resultItems = results.filter((r) => r.kind === "result");
 
@@ -71,15 +69,15 @@ export default async function EventDetailPage({ params }: Props) {
 
       <Section className="!pt-12">
         <div className="mx-auto max-w-3xl">
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isRegistrationOpen ? "bg-brand text-brand-fg" : isUpcoming ? "bg-yellow-600 text-white" : "bg-surface-2 text-content-muted"}`}>
-            {isRegistrationOpen ? "Registrations open" : isUpcoming ? "Registrations closed" : "Past event"}
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${regOpen ? "bg-brand text-brand-fg" : isUpcoming ? "bg-yellow-600 text-white" : "bg-surface-2 text-content-muted"}`}>
+            {regOpen ? "Registrations open" : isUpcoming ? "Registrations closed" : "Past event"}
           </span>
           <p className="mt-5 text-base leading-relaxed text-content-muted sm:text-lg">{event.description}</p>
 
           {isUpcoming && (
             <div className="mt-8">
-              <RegisterButton eventId={event.id} disabled={!isRegistrationOpen} className="btn-primary px-7 py-3 text-base">
-                {isRegistrationOpen ? `Register for ${event.title}` : "Registrations closed"}
+              <RegisterButton eventId={event.id} disabled={!regOpen} className="btn-primary px-7 py-3 text-base">
+                {regOpen ? `Register for ${event.title}` : "Registrations closed"}
               </RegisterButton>
             </div>
           )}
@@ -137,7 +135,7 @@ export default async function EventDetailPage({ params }: Props) {
         </Section>
       )}
 
-      {isUpcoming && <CtaBand title={`Be part of ${event.title}`} />}
+      {isUpcoming && <CtaBand title={`Be part of ${event.title}`} registrationOpen={regOpen} />}
     </>
   );
 }

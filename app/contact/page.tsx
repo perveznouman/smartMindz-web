@@ -4,6 +4,7 @@ import { Section, SectionHeader } from "@/components/ui/Section";
 import { RegisterButton } from "@/components/registration/RegisterButton";
 import { getSiteContent } from "@/lib/data";
 import { getContactLink } from "@/lib/notify/whatsapp";
+import { isRegistrationOpen } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 
 export default async function ContactPage() {
   const content = await getSiteContent();
+  const regOpen = isRegistrationOpen(content);
 
   const channels = [
     {
@@ -71,8 +73,8 @@ export default async function ContactPage() {
           Ready to step into the spotlight?
         </p>
         <div className="mt-4">
-          <RegisterButton className="btn-primary px-7 py-3 text-base">
-            Register for an event
+          <RegisterButton disabled={!regOpen} className="btn-primary px-7 py-3 text-base">
+            {regOpen ? "Register for an event" : "Registrations closed"}
           </RegisterButton>
         </div>
       </div>

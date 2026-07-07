@@ -5,9 +5,11 @@ import { ArrowRight } from "lucide-react";
 export function CtaBand({
   title = "Your talent deserves the spotlight.",
   subtitle = "Join the revolution today — register for an upcoming event and shine.",
+  registrationOpen = true,
 }: {
   title?: string;
   subtitle?: string;
+  registrationOpen?: boolean;
 }) {
   return (
     <section className="container-page py-16">
@@ -24,8 +26,12 @@ export function CtaBand({
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-white/90">{subtitle}</p>
           <div className="mt-8">
-            <RegisterButton className="btn bg-white px-7 py-3 text-base text-brand hover:-translate-y-0.5 hover:shadow-glow">
-              Register now <ArrowRight className="h-4 w-4" />
+            <RegisterButton
+              disabled={!registrationOpen}
+              className="btn bg-white px-7 py-3 text-base text-brand hover:-translate-y-0.5 hover:shadow-glow"
+            >
+              {registrationOpen ? "Register now" : "Registrations closed"}
+              {registrationOpen && <ArrowRight className="h-4 w-4" />}
             </RegisterButton>
           </div>
         </div>
