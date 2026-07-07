@@ -22,6 +22,8 @@ export interface EventItem {
   coverUrl: string | null;
   /** Category ids this event is open to (drives the dependent dropdown). */
   categoryIds: string[];
+  registrationOpen: boolean;
+  registrationClosesAt: string | null;
 }
 
 export interface TeamMember {
@@ -41,9 +43,13 @@ export interface GalleryPhoto {
   sortOrder: number;
 }
 
+/** A single downloadable/viewable attachment on an event — a rule sheet, a
+ * results PDF, a scoresheet, etc. `kind` groups them into sections on the
+ * event page; each section supports any number of attachments. */
 export interface EventResult {
   id: string;
   eventId: string;
+  kind: "rule" | "result";
   title: string;
   body: string | null;
   fileUrl: string | null;

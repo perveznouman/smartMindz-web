@@ -30,23 +30,23 @@ export function Gallery({ photos }: { photos: GalleryPhoto[] }) {
 
   return (
     <>
-      <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 [&>*]:mb-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {shown.map((photo, i) => (
           <button
             key={photo.id}
             type="button"
             onClick={() => setIndex(i)}
-            className="group relative block w-full overflow-hidden rounded-xl border border-border bg-surface-2"
+            className="group relative block w-full overflow-hidden rounded-xl border border-border bg-surface-2 aspect-square"
             aria-label={photo.caption ?? "Open photo"}
           >
             <Image
               src={photo.thumbUrl ?? photo.url}
               alt={photo.caption ?? "SmartMindz event photo"}
               width={400}
-              height={300}
+              height={400}
               loading="lazy"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="h-auto w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </button>
         ))}

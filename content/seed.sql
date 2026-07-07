@@ -21,6 +21,10 @@ create table if not exists events (
   location    text,
   status      text not null default 'upcoming' check (status in ('upcoming','past')),
   cover_url   text,
+  -- Registration control: toggle `registration_open` off, or set a past
+  -- `registration_closes_at`, to close signups without a redeploy.
+  registration_open      boolean not null default true,
+  registration_closes_at timestamptz,
   created_at  timestamptz not null default now()
 );
 
@@ -58,21 +62,38 @@ create table if not exists site_content (
 create table if not exists results (
   id        uuid primary key default gen_random_uuid(),
   event_id  text not null references events(id) on delete cascade,
+  -- 'rule' = rules & guidelines section, 'result' = results section. Each
+  -- event can have any number of rows of either kind.
+  kind      text not null default 'result' check (kind in ('rule','result')),
   title     text not null,
   body      text,
   file_url  text
 );
 
+create index if not exists idx_results_event_kind on results(event_id, kind);
+
 create table if not exists registrations (
-  id          uuid primary key default gen_random_uuid(),
-  full_name   text not null,
-  category_id text references categories(id),
-  institution text,
-  whatsapp    text not null,
-  event_id    text references events(id),
-  city        text,
-  created_at  timestamptz not null default now()
+  id            uuid primary key default gen_random_uuid(),
+  full_name     text not null,
+  category_id   text references categories(id),
+  category_name text,
+  class_year    text,
+  institution   text,
+  whatsapp      text not null,
+  event_id      text references events(id),
+  event_name    text,
+  city          text,
+  payment_url   text,
+  created_at    timestamptz not null default now()
 );
+
+-- Safe to rerun on a DB that already has the table without these columns.
+alter table events add column if not exists registration_open boolean not null default true;
+alter table events add column if not exists registration_closes_at timestamptz;
+alter table registrations add column if not exists category_name text;
+alter table registrations add column if not exists class_year   text;
+alter table registrations add column if not exists event_name   text;
+alter table registrations add column if not exists payment_url  text;
 
 create index if not exists idx_event_categories_category on event_categories(category_id);
 create index if not exists idx_gallery_event on gallery_photos(event_id);
@@ -123,19 +144,22 @@ on conflict (id) do update set name = excluded.name, sort_order = excluded.sort_
 
 -- ---- Seed: events ----------------------------------------------------------
 
+-- Cover banners live in Supabase Storage under the `banners/` folder of the
+-- `smartmindz` bucket (uploaded manually via the dashboard). Gallery photos are
+-- separate and populated by `npm run upload-gallery`.
 insert into events (id, slug, title, description, event_date, location, status, cover_url) values
+  ('evt-independce-fest-2026','indipendence-fest-2027','Independance Fiesta 2k26',
+   'Full of talents — our upcoming celebration of creativity and skill across speeches, writing and the arts, with guaranteed certificates, trophies and grand felicitations.',
+   '2026-08-15','Vaniyambadi, Tamil Nadu','upcoming',
+   'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/banners/IndFiesta27banner.jpeg'),
   ('evt-republic-fest-2026','republic-fest-2026','Republic Fest 2026',
-   'Our flagship celebration of talent — 1000+ vibrant participants across speeches, debates, essays, posters, drawing and calligraphy. Compete, learn and shine with guaranteed certificates, trophies and grand felicitations.',
-   '2026-01-26','Vaniyambadi, Tamil Nadu','upcoming','/gallery/sample-1.jpg'),
-  ('evt-speech-junior-2026','junior-speech-championship-2026','Junior Speech Championship',
-   'A multilingual speech competition for our youngest stars in Tamil, Hindi, Urdu and English.',
-   '2026-02-15','Online','upcoming','/gallery/sample-2.jpg'),
-  ('evt-calligraphy-2026','calligraphy-masters-2026','Calligraphy Masters',
-   'Showcase the art of beautiful writing across scripts and languages.',
-   '2026-03-10','Vaniyambadi, Tamil Nadu','upcoming','/gallery/sample-3.jpg'),
-  ('evt-republic-fest-2025','republic-fest-2025','Republic Fest 2025',
-   'Where it all came alive last year — packed halls, fierce competition and unforgettable performances across every category.',
-   '2025-01-26','Vaniyambadi, Tamil Nadu','past','/gallery/sample-4.jpg')
+   'Our flagship celebration of talent — 1000+ vibrant participants across speeches, debates, essays, posters, drawing and calligraphy.',
+   '2026-01-26','Vaniyambadi, Tamil Nadu','past',
+   'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/banners/RepublicFest26banner.jpg'),
+  ('mindspark-2025','mindspark-2025','MindSpark 2025',
+   'Where it all came alive — packed halls, fierce competition and unforgettable performances across every category.',
+   '2025-01-26','Vaniyambadi, Tamil Nadu','past',
+   'https://daqtsgojquekveqnfsqq.supabase.co/storage/v1/object/public/smartmindz/banners/Mindsparkbanner.jpg')
 on conflict (id) do update set
   slug = excluded.slug, title = excluded.title, description = excluded.description,
   event_date = excluded.event_date, location = excluded.location,
@@ -143,29 +167,11 @@ on conflict (id) do update set
 
 -- ---- Seed: event <-> category links ----------------------------------------
 
--- Republic Fest (2026 & 2025): all categories.
+-- All three events are open to every category.
 insert into event_categories (event_id, category_id)
 select e.id, c.id
 from events e cross join categories c
-where e.id in ('evt-republic-fest-2026','evt-republic-fest-2025')
-on conflict do nothing;
-
--- Junior Speech: Classes 1–5.
-insert into event_categories (event_id, category_id) values
-  ('evt-speech-junior-2026','cat-1'),
-  ('evt-speech-junior-2026','cat-2'),
-  ('evt-speech-junior-2026','cat-3'),
-  ('evt-speech-junior-2026','cat-4'),
-  ('evt-speech-junior-2026','cat-5')
-on conflict do nothing;
-
--- Calligraphy Masters: Class 6, 7, College, Professional, Homemaker.
-insert into event_categories (event_id, category_id) values
-  ('evt-calligraphy-2026','cat-6'),
-  ('evt-calligraphy-2026','cat-7'),
-  ('evt-calligraphy-2026','cat-college'),
-  ('evt-calligraphy-2026','cat-professional'),
-  ('evt-calligraphy-2026','cat-homemaker')
+where e.id in ('evt-independce-fest-2026','evt-republic-fest-2026','mindspark-2025')
 on conflict do nothing;
 
 -- ---- Seed: team ------------------------------------------------------------
@@ -175,7 +181,8 @@ insert into team_members (id, name, role, photo_url, sort_order) values
   ('tm-2','Aaqib Ameen','Software Engineer',null,2),
   ('tm-3','Khanita Mariam','Parenting Coach',null,3),
   ('tm-4','Nouman Pervez','Software Engineer',null,4),
-  ('tm-5','Sajid Basha','Software Engineer',null,5)
+  ('tm-5','Sajid Basha','Software Engineer',null,5),
+  ('tm-6','Mohammed Sadiq','N/A',null,6)
 on conflict (id) do update set
   name = excluded.name, role = excluded.role, sort_order = excluded.sort_order;
 
