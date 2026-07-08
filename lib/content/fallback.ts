@@ -130,6 +130,8 @@ export const fallbackSiteContent: SiteContent = {
   email: null,
   secondaryPhone: null,
   secondaryEmail: null,
+  countdownTitle: "Independance Fiesta 2k26 begins in",
+  countdownTarget: "2026-08-15T09:00:00+05:30",
   registrationOpen: true,
   registrationClosesAt: null,
   paymentAmount: 1,
