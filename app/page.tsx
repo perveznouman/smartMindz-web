@@ -9,6 +9,8 @@ import {
   Youtube,
   MessageCircle,
   MapPin,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { Hero } from "@/components/Hero";
 import { Section, SectionHeader } from "@/components/ui/Section";
@@ -17,6 +19,7 @@ import { EventCard } from "@/components/EventCard";
 import { TeamGrid } from "@/components/TeamGrid";
 import { Gallery } from "@/components/Gallery";
 import { CtaBand } from "@/components/CtaBand";
+import { Countdown } from "@/components/Countdown";
 import { getEvents, getGallery, getSiteContent, getTeam } from "@/lib/data";
 import { getContactLink } from "@/lib/notify/whatsapp";
 import { isRegistrationOpen } from "@/lib/utils";
@@ -66,10 +69,33 @@ export default async function HomePage() {
       href: content.youtube.href,
       accent: "text-danger",
     },
+    ...(content.secondaryPhone
+      ? [
+          {
+            icon: Phone,
+            label: "Phone",
+            value: content.secondaryPhone,
+            href: `tel:${content.secondaryPhone}`,
+            accent: "text-content",
+          },
+        ]
+      : []),
+    ...(content.secondaryEmail
+      ? [
+          {
+            icon: Mail,
+            label: "Email",
+            value: content.secondaryEmail,
+            href: `mailto:${content.secondaryEmail}`,
+            accent: "text-content",
+          },
+        ]
+      : []),
   ];
 
   return (
     <>
+      <Countdown title={content.countdownTitle} target={content.countdownTarget} />
       <Hero content={content} />
 
       {/* Feature strip */}
