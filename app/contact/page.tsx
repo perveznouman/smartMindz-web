@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Instagram, Youtube, MessageCircle, MapPin } from "lucide-react";
+import { Instagram, Youtube, MessageCircle, MapPin, Phone, Mail } from "lucide-react";
 import { Section, SectionHeader } from "@/components/ui/Section";
 import { RegisterButton } from "@/components/registration/RegisterButton";
 import { getSiteContent } from "@/lib/data";
@@ -40,6 +40,28 @@ export default async function ContactPage() {
       href: content.youtube.href,
       accent: "text-danger",
     },
+    ...(content.secondaryPhone
+      ? [
+          {
+            icon: Phone,
+            label: "Phone",
+            value: content.secondaryPhone,
+            href: `tel:${content.secondaryPhone}`,
+            accent: "text-content",
+          },
+        ]
+      : []),
+    ...(content.secondaryEmail
+      ? [
+          {
+            icon: Mail,
+            label: "Email",
+            value: content.secondaryEmail,
+            href: `mailto:${content.secondaryEmail}`,
+            accent: "text-content",
+          },
+        ]
+      : []),
   ];
 
   return (

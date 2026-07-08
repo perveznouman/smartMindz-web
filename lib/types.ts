@@ -78,6 +78,8 @@ export interface SiteContent {
   whatsappContact: string;
   whatsappGroupLink: string;
   email: string | null;
+  secondaryPhone: string | null;
+  secondaryEmail: string | null;
   /** Global registration on/off switch — the site currently runs one shared
    * registration form (not per-event), so this single flag controls every
    * "Register" button site-wide. Toggle from Supabase, no redeploy needed. */
