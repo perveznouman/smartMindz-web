@@ -32,3 +32,4 @@ yarn-error.log*
 WPhotos/
 Photos/
 public/gallery/
+.claude/settings.local.json
