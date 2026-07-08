@@ -10,6 +10,9 @@ import { CtaBand } from "@/components/CtaBand";
 import { getEventBySlug, getGallery, getResults, getSiteContent } from "@/lib/data";
 import { formatEventDate, isRegistrationOpen } from "@/lib/utils";
 
+// Re-fetch from Supabase at most every 60s so content edits go live without a redeploy.
+export const revalidate = 60;
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

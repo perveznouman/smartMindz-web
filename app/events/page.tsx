@@ -7,6 +7,9 @@ import { CtaBand } from "@/components/CtaBand";
 import { getEvents, getGallery, getSiteContent } from "@/lib/data";
 import { isRegistrationOpen } from "@/lib/utils";
 
+// Re-fetch from Supabase at most every 60s so content edits go live without a redeploy.
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Events",
   description: "Upcoming and past SmartMindz events, with photo galleries.",

@@ -6,6 +6,9 @@ import { MapPin, Languages, Trophy } from "lucide-react";
 import { getSiteContent } from "@/lib/data";
 import { isRegistrationOpen } from "@/lib/utils";
 
+// Re-fetch from Supabase at most every 60s so content edits go live without a redeploy.
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "About",
   description: "The story of SmartMindz — celebrating hidden talent across Vaniyambadi and beyond.",

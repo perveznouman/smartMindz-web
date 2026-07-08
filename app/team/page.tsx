@@ -5,6 +5,9 @@ import { CtaBand } from "@/components/CtaBand";
 import { getSiteContent, getTeam } from "@/lib/data";
 import { isRegistrationOpen } from "@/lib/utils";
 
+// Re-fetch from Supabase at most every 60s so content edits go live without a redeploy.
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Team",
   description: "Meet the team behind SmartMindz.",

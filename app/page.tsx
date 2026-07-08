@@ -28,6 +28,10 @@ const features = [
   { icon: Sparkles, title: "Online & offline", body: "Thrilling, energy-packed events twice a year." },
 ];
 
+// Re-fetch from Supabase at most every 60s so content edits (team, events,
+// gallery, site copy) go live without a redeploy.
+export const revalidate = 60;
+
 export default async function HomePage() {
   const [content, events, team, gallery] = await Promise.all([
     getSiteContent(),

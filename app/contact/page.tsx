@@ -6,6 +6,9 @@ import { getSiteContent } from "@/lib/data";
 import { getContactLink } from "@/lib/notify/whatsapp";
 import { isRegistrationOpen } from "@/lib/utils";
 
+// Re-fetch from Supabase at most every 60s so content edits go live without a redeploy.
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Contact",
   description: "Get in touch with SmartMindz — WhatsApp, Instagram and YouTube.",
