@@ -116,6 +116,14 @@ function normalizeSiteContent(merged: Record<string, unknown>): SiteContent {
       typeof merged.secondaryEmail === "string" && merged.secondaryEmail
         ? merged.secondaryEmail
         : fallbackSiteContent.secondaryEmail,
+    countdownTitle:
+      typeof merged.countdownTitle === "string" && merged.countdownTitle
+        ? merged.countdownTitle
+        : fallbackSiteContent.countdownTitle,
+    countdownTarget:
+      typeof merged.countdownTarget === "string" && merged.countdownTarget
+        ? merged.countdownTarget
+        : fallbackSiteContent.countdownTarget,
   };
 }
 

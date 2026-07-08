@@ -80,6 +80,11 @@ export interface SiteContent {
   email: string | null;
   secondaryPhone: string | null;
   secondaryEmail: string | null;
+  /** Countdown banner shown at the very top of the home page. Both are
+   * editable from Supabase. The banner hides itself when the target is unset
+   * or already in the past. `countdownTarget` is an ISO datetime string. */
+  countdownTitle: string | null;
+  countdownTarget: string | null;
   /** Global registration on/off switch — the site currently runs one shared
    * registration form (not per-event), so this single flag controls every
    * "Register" button site-wide. Toggle from Supabase, no redeploy needed. */
