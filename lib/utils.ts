@@ -40,3 +40,8 @@ export function avatarPlaceholder(name: string): string {
   });
   return `https://ui-avatars.com/api/?${params.toString()}`;
 }
+
+/** Convert a string to title case (capitalize first letter of each word). */
+export function toTitleCase(str: string): string {
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+}

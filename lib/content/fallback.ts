@@ -128,6 +128,8 @@ export const fallbackSiteContent: SiteContent = {
   // Until then we fall back to a direct chat with the contact number.
   whatsappGroupLink: "https://wa.me/919600707610",
   email: null,
+  secondaryPhone: null,
+  secondaryEmail: null,
   registrationOpen: true,
   registrationClosesAt: null,
   paymentAmount: 1,

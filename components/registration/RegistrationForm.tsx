@@ -17,6 +17,7 @@ import {
 import QRCode from "qrcode";
 import { festCategories, getFestCategory } from "@/lib/data/festEvents";
 import { getPaymentConfig, buildUpiLink } from "@/lib/data/payment";
+import { toTitleCase } from "@/lib/utils";
 import type { SiteContent } from "@/lib/types";
 
 type SuccessState = {
@@ -42,9 +43,13 @@ const CITY_OPTIONS = [
 export function RegistrationForm({
   content,
   onClose,
+  onRegistrationStart,
+  onRegistrationComplete,
 }: {
   content: SiteContent;
   onClose?: () => void;
+  onRegistrationStart?: () => void;
+  onRegistrationComplete?: () => void;
 }) {
   const payment = useMemo(() => getPaymentConfig(content), [content]);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -143,6 +148,7 @@ export function RegistrationForm({
         joinLink: data.joinLink,
         contact: data.contact,
       });
+      onRegistrationStart?.();
     } catch {
       setServerError("Network error. Please check your connection and retry.");
     }
@@ -167,6 +173,7 @@ export function RegistrationForm({
         return;
       }
       setPaymentUploaded(true);
+      onRegistrationComplete?.();
     } catch {
       setUploadError("Network error. Please try again.");
     } finally {
@@ -183,7 +190,7 @@ export function RegistrationForm({
         </div>
         <h3 className="mt-5 text-2xl font-bold font-display">You&apos;re all set! 🎉</h3>
         <p className="mt-2 text-sm text-content-muted">
-          Hi <strong className="text-content">{success.fullName}</strong>! Payment received for{" "}
+          Hi <strong className="text-content">{toTitleCase(success.fullName)}</strong>! Payment received for{" "}
           <strong className="text-content">{success.eventTitle}</strong>.
           Join our WhatsApp group for updates, schedule and event details.
         </p>
@@ -233,7 +240,7 @@ export function RegistrationForm({
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15">
           <CheckCircle2 className="h-8 w-8 text-success" />
         </div>
-        <h3 className="mt-5 text-2xl font-bold font-display">{success.fullName} registered! 🎉</h3>
+        <h3 className="mt-5 text-2xl font-bold font-display">{toTitleCase(success.fullName)} Registered! 🎉</h3>
         <p className="mt-2 text-sm text-content-muted">
           One last step for <strong className="text-content">{success.eventTitle}</strong> —
           pay the entry fee and upload your payment screenshot to confirm your spot

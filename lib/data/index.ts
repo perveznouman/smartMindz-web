@@ -108,6 +108,14 @@ function normalizeSiteContent(merged: Record<string, unknown>): SiteContent {
       typeof merged.paymentNote === "string" && merged.paymentNote
         ? merged.paymentNote
         : fallbackSiteContent.paymentNote,
+    secondaryPhone:
+      typeof merged.secondaryPhone === "string" && merged.secondaryPhone
+        ? merged.secondaryPhone
+        : fallbackSiteContent.secondaryPhone,
+    secondaryEmail:
+      typeof merged.secondaryEmail === "string" && merged.secondaryEmail
+        ? merged.secondaryEmail
+        : fallbackSiteContent.secondaryEmail,
   };
 }
 
