@@ -49,25 +49,27 @@ create table if not exists results (
   file_url  text
 );
 
+-- 4-digit human-friendly registration reference (1000–9999), globally unique.
+create sequence if not exists registration_code_seq
+  as integer minvalue 1000 maxvalue 9999 start with 1000;
+
 create table if not exists registrations (
-  id            uuid primary key default gen_random_uuid(),
-  full_name     text not null,
-  category_id   text,
-  category_name text,
-  class_year    text,
-  institution   text,
-  whatsapp      text not null,
-  event_id      text references events(id),
-  event_name    text,
-  city          text,
-  payment_url   text,
-  created_at    timestamptz not null default now()
+  id                uuid primary key default gen_random_uuid(),
+  registration_code integer unique not null default nextval('registration_code_seq'),
+  full_name         text not null,
+  category_name     text,
+  class_year        text,
+  institution       text,
+  whatsapp          text not null,
+  event_name        text,
+  city              text,
+  payment_url       text,
+  created_at        timestamptz not null default now()
 );
 
 -- ---- Indexes ---------------------------------------------------------------
 
 create index if not exists idx_gallery_event       on gallery_photos(event_id);
-create index if not exists idx_registrations_event on registrations(event_id);
 create index if not exists idx_results_event_kind  on results(event_id, kind);
 
 -- ---- Row Level Security ----------------------------------------------------
