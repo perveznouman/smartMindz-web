@@ -68,19 +68,22 @@ create table if not exists results (
 
 create index if not exists idx_results_event_kind on results(event_id, kind);
 
+-- 4-digit human-friendly registration reference (1000–9999), globally unique.
+create sequence if not exists registration_code_seq
+  as integer minvalue 1000 maxvalue 9999 start with 1000;
+
 create table if not exists registrations (
-  id            uuid primary key default gen_random_uuid(),
-  full_name     text not null,
-  category_id   text references categories(id),
-  category_name text,
-  class_year    text,
-  institution   text,
-  whatsapp      text not null,
-  event_id      text references events(id),
-  event_name    text,
-  city          text,
-  payment_url   text,
-  created_at    timestamptz not null default now()
+  id                uuid primary key default gen_random_uuid(),
+  registration_code integer unique not null default nextval('registration_code_seq'),
+  full_name         text not null,
+  category_name     text,
+  class_year        text,
+  institution       text,
+  whatsapp          text not null,
+  event_name        text,
+  city              text,
+  payment_url       text,
+  created_at        timestamptz not null default now()
 );
 
 -- Safe to rerun on a DB that already has the table without these columns.
@@ -88,10 +91,10 @@ alter table registrations add column if not exists category_name text;
 alter table registrations add column if not exists class_year   text;
 alter table registrations add column if not exists event_name   text;
 alter table registrations add column if not exists payment_url  text;
+-- registration_code backfill for existing tables → see content/registration-code.sql
 
 create index if not exists idx_event_categories_category on event_categories(category_id);
 create index if not exists idx_gallery_event on gallery_photos(event_id);
-create index if not exists idx_registrations_event on registrations(event_id);
 
 -- ---- Row Level Security ----------------------------------------------------
 -- Public (anon) may READ content tables. Writes to registrations happen only
