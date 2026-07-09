@@ -22,6 +22,7 @@ import type { SiteContent } from "@/lib/types";
 
 type SuccessState = {
   registrationId: string | null;
+  registrationCode: number | null;
   fullName: string;
   eventTitle: string;
   joinLink: string;
@@ -143,6 +144,7 @@ export function RegistrationForm({
       }
       setSuccess({
         registrationId: data.registrationId ?? null,
+        registrationCode: data.registrationCode ?? null,
         fullName: data.fullName ?? "Friend",
         eventTitle: data.eventTitle,
         joinLink: data.joinLink,
@@ -195,6 +197,20 @@ export function RegistrationForm({
           Join our WhatsApp group for updates, schedule and event details.
         </p>
 
+        {success.registrationCode != null && (
+          <div className="mx-auto mt-5 max-w-xs rounded-2xl border border-brand/30 bg-brand/5 px-6 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-content-muted">
+              Your registration number
+            </p>
+            <p className="mt-1 text-4xl font-bold tabular-nums text-brand font-display">
+              {success.registrationCode}
+            </p>
+            <p className="mt-2 text-xs text-content-muted">
+              Save this — it&apos;s your reference for this event.
+            </p>
+          </div>
+        )}
+
         {joinQrUrl && (
           <div className="mt-5 rounded-2xl border border-brand/30 bg-brand/5 p-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -241,7 +257,19 @@ export function RegistrationForm({
           <CheckCircle2 className="h-8 w-8 text-success" />
         </div>
         <h3 className="mt-5 text-2xl font-bold font-display">{toTitleCase(success.fullName)} Registered! 🎉</h3>
-        <p className="mt-2 text-sm text-content-muted">
+
+        {success.registrationCode != null && (
+          <div className="mx-auto mt-4 max-w-xs rounded-2xl border border-brand/30 bg-brand/5 px-6 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-content-muted">
+              Your registration number
+            </p>
+            <p className="mt-0.5 text-3xl font-bold tabular-nums text-brand font-display">
+              {success.registrationCode}
+            </p>
+          </div>
+        )}
+
+        <p className="mt-4 text-sm text-content-muted">
           One last step for <strong className="text-content">{success.eventTitle}</strong> —
           pay the entry fee and upload your payment screenshot to confirm your spot
           and unlock the WhatsApp group.

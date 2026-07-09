@@ -41,10 +41,11 @@ export async function POST(request: Request) {
 
   let persisted = false;
   let registrationId: string | null = null;
+  let registrationCode: number | null = null;
   if (supabase) {
-    // category_id / event_id are legacy FK columns; the fest cascade stores
-    // human-readable values in the text columns instead (see the migration in
-    // content/registration-fest.sql).
+    // Category and event are stored as human-readable text (driven by
+    // lib/data/festEvents.ts), not as foreign keys. registration_code is
+    // assigned automatically by the DB and read back below.
     const { data: inserted, error } = await supabase
       .from("registrations")
       .insert({
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
         event_name: data.event,
         city: data.city,
       })
-      .select("id")
+      .select("id, registration_code")
       .single();
     if (error) {
       console.error("Registration insert failed:", error.message);
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
     }
     persisted = true;
     registrationId = inserted?.id ?? null;
+    registrationCode = inserted?.registration_code ?? null;
   } else {
     // No service key configured (e.g. local dev). Don't block the demo flow.
     console.warn("SUPABASE_SERVICE_ROLE_KEY not set — registration not persisted.");
@@ -78,6 +80,7 @@ export async function POST(request: Request) {
     ok: true,
     persisted,
     registrationId,
+    registrationCode,
     fullName: data.fullName,
     eventTitle,
     joinLink: getJoinLink(content),
