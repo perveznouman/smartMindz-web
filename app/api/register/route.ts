@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   const eventTitle = data.event || "your event";
   const categoryName = getFestCategory(data.categoryId)?.name ?? data.categoryId;
 
-  const whatsapp = normalizeWhatsapp(data.whatsapp);
+  const whatsapp = normalizeWhatsapp(data.whatsapp, data.whatsappCountry);
   const supabase = getServiceClient();
 
   let persisted = false;
