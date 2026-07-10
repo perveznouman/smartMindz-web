@@ -17,6 +17,7 @@ import {
 import QRCode from "qrcode";
 import { festCategories, getFestCategory } from "@/lib/data/festEvents";
 import { getPaymentConfig, buildUpiLink } from "@/lib/data/payment";
+import { COUNTRIES, DEFAULT_COUNTRY_CODE, getCountry } from "@/lib/data/countries";
 import { toTitleCase } from "@/lib/utils";
 import type { SiteContent } from "@/lib/types";
 
@@ -78,6 +79,7 @@ export function RegistrationForm({
       categoryId: "",
       classYear: "",
       institution: "",
+      whatsappCountry: DEFAULT_COUNTRY_CODE,
       whatsapp: "",
       event: "",
       city: "",
@@ -87,6 +89,8 @@ export function RegistrationForm({
   const selectedCategory = watch("categoryId");
   const selectedEvent = watch("event");
   const selectedClassYear = watch("classYear");
+  const selectedCountry = watch("whatsappCountry");
+  const activeCountry = getCountry(selectedCountry) ?? getCountry(DEFAULT_COUNTRY_CODE)!;
 
   // The chosen category drives both dependent dropdowns.
   const activeCategory = useMemo(
@@ -422,10 +426,32 @@ export function RegistrationForm({
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4">
           <div>
             <label htmlFor="whatsapp" className="label-field">WhatsApp number</label>
-            <input id="whatsapp" type="tel" inputMode="tel" autoComplete="tel" className="input-field" placeholder="10-digit mobile number" {...register("whatsapp")} />
+            <div className="flex gap-2">
+              <select
+                aria-label="Country code"
+                className="input-field w-auto shrink-0 pr-8"
+                {...register("whatsappCountry")}
+              >
+                {COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.flag} +{c.dial}
+                  </option>
+                ))}
+              </select>
+              <input
+                id="whatsapp"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                className="input-field flex-1"
+                placeholder={`${activeCountry.digits}-digit mobile number`}
+                {...register("whatsapp")}
+              />
+            </div>
+            {errors.whatsappCountry && <p className="mt-1 text-xs text-danger">{errors.whatsappCountry.message}</p>}
             {errors.whatsapp && <p className="mt-1 text-xs text-danger">{errors.whatsapp.message}</p>}
           </div>
           <div>

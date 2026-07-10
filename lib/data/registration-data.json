@@ -1,0 +1,60 @@
+{
+  "countries": [
+    { "code": "IN", "name": "India", "flag": "🇮🇳", "dial": "91", "digits": 10 },
+    { "code": "AE", "name": "UAE", "flag": "🇦🇪", "dial": "971", "digits": 9 },
+    { "code": "SA", "name": "Saudi Arabia", "flag": "🇸🇦", "dial": "966", "digits": 9 },
+    { "code": "KW", "name": "Kuwait", "flag": "🇰🇼", "dial": "965", "digits": 8 },
+    { "code": "QA", "name": "Qatar", "flag": "🇶🇦", "dial": "974", "digits": 8 },
+    { "code": "OM", "name": "Oman", "flag": "🇴🇲", "dial": "968", "digits": 8 },
+    { "code": "BH", "name": "Bahrain", "flag": "🇧🇭", "dial": "973", "digits": 8 },
+    { "code": "US", "name": "USA", "flag": "🇺🇸", "dial": "1", "digits": 10 },
+    { "code": "CA", "name": "Canada", "flag": "🇨🇦", "dial": "1", "digits": 10 },
+    { "code": "GB", "name": "UK", "flag": "🇬🇧", "dial": "44", "digits": 10 },
+    { "code": "SG", "name": "Singapore", "flag": "🇸🇬", "dial": "65", "digits": 8 },
+    { "code": "AU", "name": "Australia", "flag": "🇦🇺", "dial": "61", "digits": 9 }
+  ],
+  "festCategories": [
+    {
+      "id": "category-1",
+      "name": "Category 1",
+      "events": ["Fancy Dress (Online)", "Rhymes Recitation (Online)", "Colouring (Offline)"],
+      "classYears": ["Pre KG", "LKG", "UKG"]
+    },
+    {
+      "id": "category-2",
+      "name": "Category 2",
+      "events": ["Show & Tell (Online)", "Rhymes Recitation (Online)", "Colouring (Offline)"],
+      "classYears": ["1st", "2nd", "3rd"]
+    },
+    {
+      "id": "category-3",
+      "name": "Category 3",
+      "events": ["Handwriting (Offline)", "Drawing (Offline)", "Speech (Offline)", "Best out of Waste (Online)"],
+      "classYears": ["4th", "5th"]
+    },
+    {
+      "id": "category-4",
+      "name": "Category 4",
+      "events": ["Drawing (Offline)", "Speech (Offline)", "Essay Writing (Online)", "Best out of Waste"],
+      "classYears": ["6th", "7th", "8th"]
+    },
+    {
+      "id": "category-5",
+      "name": "Category 5",
+      "events": ["Poster Presentation (Offline)", "Essay Writing (Online)", "Speech (Offline)", "Short Film (Online)"],
+      "classYears": ["9th", "10th", "11th", "12th"]
+    },
+    {
+      "id": "category-6",
+      "name": "Category 6",
+      "events": ["Poster Presentation (Offline)", "Speech (Offline)", "Debate (Offline)", "Calligraphy (Offline)", "Short Film (Online)"],
+      "classYears": ["Diploma 1st", "Diploma 2nd", "Diploma 3rd", "UG 1st", "UG 2nd", "UG 3rd", "PG 1st", "PG 2nd"]
+    },
+    {
+      "id": "category-7",
+      "name": "Category 7",
+      "events": ["Speech (Offline)", "Poster Presentation (Offline)", "Calligraphy (Offline)", "Quiz (Offline)"],
+      "classYears": ["Open Category"]
+    }
+  ]
+}

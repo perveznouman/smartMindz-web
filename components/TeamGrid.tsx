@@ -8,7 +8,7 @@ export function TeamGrid({ members }: { members: TeamMember[] }) {
     <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-4">
       {members.map((member, i) => (
         <Reveal key={member.id} delay={i * 0.05}>
-          <figure className="card flex h-96 flex-col items-center justify-center p-8 text-center transition-transform duration-300 hover:-translate-y-2">
+          <figure className="card flex h-[28rem] flex-col items-center justify-center p-8 text-center transition-transform duration-300 hover:-translate-y-2">
             <div className="relative h-32 w-32 overflow-hidden rounded-full ring-2 ring-brand/20 flex-shrink-0">
               <Image
                 src={member.photoUrl ?? avatarPlaceholder(member.name)}
