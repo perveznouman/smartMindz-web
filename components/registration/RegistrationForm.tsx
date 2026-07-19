@@ -16,7 +16,7 @@ import {
 } from "@/lib/validation/registration";
 import QRCode from "qrcode";
 import { festCategories, getFestCategory } from "@/lib/data/festEvents";
-import { getPaymentConfig, buildUpiLink } from "@/lib/data/payment";
+import { getPaymentConfig, buildUpiLink, buildUpiAppLinks } from "@/lib/data/payment";
 import { COUNTRIES, DEFAULT_COUNTRY_CODE, getCountry } from "@/lib/data/countries";
 import registrationData from "@/lib/data/registration-data.json";
 import { toTitleCase } from "@/lib/utils";
@@ -291,16 +291,21 @@ export function RegistrationForm({
             <span className="font-medium text-content">{payment.upiId}</span>
           </p>
 
-          <a
-            href={buildUpiLink(payment)}
-            className="btn-outline mt-3 w-full px-4 py-2 text-sm sm:hidden"
-          >
-            Pay ₹{payment.amount} in a UPI app
-          </a>
+          <div className="mt-3 grid grid-cols-3 gap-2 sm:hidden">
+            {buildUpiAppLinks(payment).map((app) => (
+              <a
+                key={app.name}
+                href={app.href}
+                className="btn-outline px-2 py-2 text-xs"
+              >
+                {app.name}
+              </a>
+            ))}
+          </div>
 
           <p className="mt-2 text-xs text-content-muted">
-            If the button doesn't open your UPI app, open your preferred UPI app (Google Pay,
-            PhonePe, Paytm) and send <strong>₹{payment.amount}</strong> to{" "}
+            If none of these open your UPI app, open Google Pay, PhonePe or Paytm
+            yourself and send <strong>₹{payment.amount}</strong> to{" "}
             <strong>{payment.upiId}</strong>
           </p>
         </div>
