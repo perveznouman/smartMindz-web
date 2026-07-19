@@ -41,7 +41,7 @@ export default async function EventDetailPage({ params }: Props) {
   // Registration is one shared form for the site (not per-event), so it's
   // gated by the global site_content toggle, not this event's own columns.
   const regOpen = isUpcoming && isRegistrationOpen(content);
-  const rules = results.filter((r) => r.kind === "rule");
+  const rules = results.filter((r) => r.kind === "rules");
   const resultItems = results.filter((r) => r.kind === "result");
 
   return (

@@ -285,7 +285,7 @@ export async function getResults(eventId: string): Promise<EventResult[]> {
     }) => ({
       id: r.id,
       eventId: r.event_id,
-      kind: r.kind === "rule" ? "rule" : "result",
+      kind: r.kind as "rule" | "result" | "rules",
       title: r.title,
       body: r.body,
       fileUrl: r.file_url,
