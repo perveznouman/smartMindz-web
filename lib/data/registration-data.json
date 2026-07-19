@@ -13,47 +13,57 @@
     { "code": "SG", "name": "Singapore", "flag": "🇸🇬", "dial": "65", "digits": 8 },
     { "code": "AU", "name": "Australia", "flag": "🇦🇺", "dial": "61", "digits": 9 }
   ],
+  "cities": [
+    "Vaniyambadi",
+    "Ambur",
+    "Oomerabad",
+    "Chennai",
+    "Gudiyatham",
+    "MelVisharam",
+    "Vellore",
+    "Bengaluru"
+  ],
   "festCategories": [
     {
       "id": "category-1",
       "name": "Category 1",
-      "events": ["Fancy Dress (Online)", "Rhymes Recitation (Online)", "Colouring (Offline)"],
+      "events": ["Rhymes Recitation (Online)", "Fancy Dress (Online)", "Colouring (Offline)"],
       "classYears": ["Pre KG", "LKG", "UKG"]
     },
     {
       "id": "category-2",
       "name": "Category 2",
-      "events": ["Show & Tell (Online)", "Rhymes Recitation (Online)", "Colouring (Offline)"],
+      "events": ["Show & Tell (Online)", "Fancy Dress (Online)", "Colouring (Offline)"],
       "classYears": ["1st", "2nd", "3rd"]
     },
     {
       "id": "category-3",
       "name": "Category 3",
-      "events": ["Handwriting (Offline)", "Drawing (Offline)", "Speech (Offline)", "Best out of Waste (Online)"],
+      "events": ["Best out of Waste (Online)", "Smart Talks (Offline)", "Handwriting (Offline)"],
       "classYears": ["4th", "5th"]
     },
     {
       "id": "category-4",
       "name": "Category 4",
-      "events": ["Drawing (Offline)", "Speech (Offline)", "Essay Writing (Online)", "Best out of Waste"],
+      "events": ["News Anchoring (Online)", "Speech (Offline)", "Creative Drawing (Offline)"],
       "classYears": ["6th", "7th", "8th"]
     },
     {
       "id": "category-5",
       "name": "Category 5",
-      "events": ["Poster Presentation (Offline)", "Essay Writing (Online)", "Speech (Offline)", "Short Film (Online)"],
+      "events": ["Short Film (Online)", "Essay Writing (Online)", "Speech (Offline)"],
       "classYears": ["9th", "10th", "11th", "12th"]
     },
     {
       "id": "category-6",
       "name": "Category 6",
-      "events": ["Poster Presentation (Offline)", "Speech (Offline)", "Debate (Offline)", "Calligraphy (Offline)", "Short Film (Online)"],
-      "classYears": ["Diploma 1st", "Diploma 2nd", "Diploma 3rd", "UG 1st", "UG 2nd", "UG 3rd", "PG 1st", "PG 2nd"]
+      "events": ["Smart Tank (Online)", "Poster Presentation (Offline)", "Speech (Offline)", "JAM (Offline)"],
+      "classYears": ["Diploma 1st", "Diploma 2nd", "Diploma 3rd", "UG 1st", "UG 2nd", "UG 3rd", "PG 1st", "PG 2nd", "Other"]
     },
     {
       "id": "category-7",
       "name": "Category 7",
-      "events": ["Speech (Offline)", "Poster Presentation (Offline)", "Calligraphy (Offline)", "Quiz (Offline)"],
+      "events": ["DIY Creative Ideas (Online)", "Poster Presentation (Offline)", "Quiz (Offline)"],
       "classYears": ["Open Category"]
     }
   ]

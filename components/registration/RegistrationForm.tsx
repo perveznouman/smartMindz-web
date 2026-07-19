@@ -18,6 +18,7 @@ import QRCode from "qrcode";
 import { festCategories, getFestCategory } from "@/lib/data/festEvents";
 import { getPaymentConfig, buildUpiLink } from "@/lib/data/payment";
 import { COUNTRIES, DEFAULT_COUNTRY_CODE, getCountry } from "@/lib/data/countries";
+import registrationData from "@/lib/data/registration-data.json";
 import { toTitleCase } from "@/lib/utils";
 import type { SiteContent } from "@/lib/types";
 
@@ -30,17 +31,7 @@ type SuccessState = {
   contact: string;
 };
 
-/** Preset cities for the City dropdown; "Other" reveals a free-text field. */
-const CITY_OPTIONS = [
-  "Vaniyambadi",
-  "Ambur",
-  "Oomrabad",
-  "Gudiyatum",
-  "Chennai",
-  "Bengaluru",
-  "MelVisharam",
-  "Vellore",
-];
+const CITY_OPTIONS = registrationData.cities;
 
 export function RegistrationForm({
   content,
