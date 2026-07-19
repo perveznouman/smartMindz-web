@@ -47,7 +47,7 @@ export interface GalleryPhoto {
 export interface EventResult {
   id: string;
   eventId: string;
-  kind: "rule" | "result";
+  kind: "rule" | "result" | "rules";
   title: string;
   body: string | null;
   fileUrl: string | null;
