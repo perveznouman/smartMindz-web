@@ -32,8 +32,8 @@ export const fallbackCategories: Category[] = [
 export const fallbackEvents: EventItem[] = [
   {
     id: "evt-independce-fest-2026",
-    slug: "indipendence-fest-2027",
-    title: "Independance Fiesta 2k26",
+    slug: "independence-fest-2026",
+    title: "Independence Fiesta 2k26",
     description:
       "Full of talents — our upcoming celebration of creativity and skill across speeches, writing and the arts, with guaranteed certificates, trophies and grand felicitations.",
     eventDate: "2026-08-15",
