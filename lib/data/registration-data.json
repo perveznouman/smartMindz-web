@@ -39,7 +39,7 @@
     {
       "id": "category-3",
       "name": "Category 3",
-      "events": ["Best out of Waste (Online)", "Smart Talks (Offline)", "Handwriting (Offline)"],
+      "events": ["Best out of Waste (Online)", "Smart Talks (Online)", "Handwriting (Offline)"],
       "classYears": ["4th", "5th"]
     },
     {
