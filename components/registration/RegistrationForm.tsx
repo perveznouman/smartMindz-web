@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  Check,
   CheckCircle2,
+  Copy,
   Loader2,
   MessageCircle,
   PartyPopper,
@@ -16,7 +18,7 @@ import {
 } from "@/lib/validation/registration";
 import QRCode from "qrcode";
 import { festCategories, getFestCategory } from "@/lib/data/festEvents";
-import { getPaymentConfig, buildUpiLink, buildUpiAppLinks } from "@/lib/data/payment";
+import { getPaymentConfig, buildUpiLink } from "@/lib/data/payment";
 import { COUNTRIES, DEFAULT_COUNTRY_CODE, getCountry } from "@/lib/data/countries";
 import registrationData from "@/lib/data/registration-data.json";
 import { toTitleCase } from "@/lib/utils";
@@ -32,6 +34,36 @@ type SuccessState = {
 };
 
 const CITY_OPTIONS = registrationData.cities;
+
+/**
+ * Copy with a legacy fallback. `navigator.clipboard` is unavailable on insecure
+ * origins and is blocked outright by several in-app browsers — including
+ * WhatsApp's, which is where most of our registration links get opened — so the
+ * modern API alone silently does nothing for a large share of registrants.
+ */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // Fall through to the execCommand path below.
+  }
+  try {
+    const field = document.createElement("textarea");
+    field.value = text;
+    field.setAttribute("readonly", "");
+    field.style.position = "fixed";
+    field.style.top = "0";
+    field.style.opacity = "0";
+    document.body.appendChild(field);
+    field.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(field);
+    return copied;
+  } catch {
+    return false;
+  }
+}
 
 export function RegistrationForm({
   content,
@@ -56,6 +88,9 @@ export function RegistrationForm({
   const [paymentUploaded, setPaymentUploaded] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [joinQrUrl, setJoinQrUrl] = useState<string | null>(null);
+  const [copiedUpiId, setCopiedUpiId] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
+  const upiIdRef = useRef<HTMLElement>(null);
 
   const {
     register,
@@ -148,6 +183,27 @@ export function RegistrationForm({
       onRegistrationStart?.();
     } catch {
       setServerError("Network error. Please check your connection and retry.");
+    }
+  }
+
+  async function handleCopyUpiId() {
+    if (await copyText(payment.upiId)) {
+      setCopyFailed(false);
+      setCopiedUpiId(true);
+      setTimeout(() => setCopiedUpiId(false), 2000);
+      return;
+    }
+    // Both clipboard paths refused. Select the ID so the OS "Copy" menu is one
+    // long-press away, and say so — a button that silently does nothing on the
+    // payment step is how we lose the registration.
+    setCopyFailed(true);
+    const node = upiIdRef.current;
+    if (node) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
     }
   }
 
@@ -281,32 +337,59 @@ export function RegistrationForm({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={qrDataUrl}
-              alt={`Scan to pay ₹${payment.amount} via UPI`}
+              alt={`Scan with a UPI app to pay ${payment.upiId}`}
               className="mx-auto mt-3 h-44 w-44 rounded-xl bg-white p-2"
             />
           )}
 
+          {/* The QR intentionally carries no amount (see buildUpiLink), so the
+              payer types it — say so, right next to the QR. */}
           <p className="mt-2 text-xs text-content-muted">
-            Scan with any UPI app · UPI ID:{" "}
-            <span className="font-medium text-content">{payment.upiId}</span>
+            On a computer? Scan this with any UPI app, then enter{" "}
+            <strong className="text-content">₹{payment.amount}</strong>.
           </p>
 
-          <div className="mt-3 grid grid-cols-3 gap-2 sm:hidden">
-            {buildUpiAppLinks(payment).map((app) => (
-              <a
-                key={app.name}
-                href={app.href}
-                className="btn-outline px-2 py-2 text-xs"
+          <div className="mt-3 rounded-xl border border-brand/30 bg-surface p-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-content-muted">
+              Paying from your phone? Send to this UPI ID
+            </p>
+            {/* Stacked, not a flex row — side by side the button squeezes the
+                ID and it wraps mid-word ("perveznouman@okic / ici"). */}
+            <div className="mt-1.5 flex flex-col items-center gap-2">
+              <code
+                ref={upiIdRef}
+                className="select-all break-all text-sm font-semibold text-content"
               >
-                {app.name}
-              </a>
-            ))}
+                {payment.upiId}
+              </code>
+              <button
+                type="button"
+                onClick={handleCopyUpiId}
+                className="btn-outline inline-flex shrink-0 items-center gap-1 px-2.5 py-1 text-xs"
+              >
+                {copiedUpiId ? (
+                  <>
+                    <Check className="h-3.5 w-3.5" /> Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5" /> Copy
+                  </>
+                )}
+              </button>
+            </div>
+            {copyFailed && (
+              <p className="mt-2 text-xs text-content-muted">
+                Your browser blocked copying — the ID above is selected, so
+                long-press it and choose <strong>Copy</strong>.
+              </p>
+            )}
           </div>
 
           <p className="mt-2 text-xs text-content-muted">
-            If none of these open your UPI app, open Google Pay, PhonePe or Paytm
-            yourself and send <strong>₹{payment.amount}</strong> to{" "}
-            <strong>{payment.upiId}</strong>
+            Open Google Pay, PhonePe, Paytm or your bank app → choose{" "}
+            <strong>Pay to UPI ID</strong> → paste the ID above and send{" "}
+            <strong>₹{payment.amount}</strong>.
           </p>
         </div>
 
