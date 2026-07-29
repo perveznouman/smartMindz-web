@@ -9,6 +9,10 @@ export interface PaymentConfig {
   amount: number;
   upiId: string;
   payeeName: string;
+  /**
+   * Kept from `site_content` but deliberately NOT put in the UPI payload — see
+   * buildUpiLink. Useful again if we move to a gateway, which can carry a note.
+   */
   note: string;
 }
 
@@ -21,44 +25,33 @@ export function getPaymentConfig(content: SiteContent): PaymentConfig {
   };
 }
 
-/** Shared UPI query string (pa/pn/am/cu/tn) used by every deep link + the QR. */
-function upiQuery(config: PaymentConfig): string {
-  return new URLSearchParams({
-    pa: config.upiId,
-    pn: config.payeeName,
-    am: String(config.amount),
-    cu: "INR",
-    tn: config.note,
-  }).toString();
-}
-
 /**
- * Build a generic UPI deep link (`upi://pay?...`). Best used as the QR payload:
- * any UPI app can scan it. As a tappable link it only behaves well on Android,
- * where it opens the system app-chooser — see `buildUpiAppLinks` for iOS.
+ * Build the UPI payload (`upi://pay?...`) used as the **QR code payload only**.
+ * Deliberately NOT rendered as a tappable link anywhere.
+ *
+ * Carries ONLY the payee (`pa`) and payee name (`pn`). Do not add `am`.
+ *
+ * A pre-filled amount is what broke payments for most of our registrants. Google
+ * Pay applies a limit check to intent-*specified* amounts arriving from an
+ * unverified third-party link (no merchant `sign`/`mc`, which a personal VPA
+ * cannot produce), and the effective cap is zero — so it declines with
+ * "You've exceeded the bank limit for this payment. Retry with a smaller
+ * amount." A ₹1 request fails exactly like a ₹100 one, which is what gives the
+ * misleading error away.
+ *
+ * Verified by decoding the payee's own Google Pay QR — the one that has always
+ * worked. It is NOT signed; it is simply `pa` + `pn` with no amount. Dropping
+ * `am` makes this payload equivalent to it. The payer types the amount, which
+ * the payment step displays prominently alongside the QR.
+ *
+ * Note: params are percent-encoded. `URLSearchParams.toString()` cannot be used
+ * here — it form-encodes spaces as `+`, which UPI apps render literally
+ * (users saw the note arrive as "SmartMindz+Registration").
  */
 export function buildUpiLink(config: PaymentConfig): string {
-  return `upi://pay?${upiQuery(config)}`;
-}
-
-export interface UpiAppLink {
-  name: string;
-  href: string;
-}
-
-/**
- * Per-app UPI deep links. iOS has no system UPI intent chooser like Android, so
- * a bare `upi://pay` link is claimed by whichever single app registered the
- * scheme (often WhatsApp Pay) and opens *that* app instead of letting the user
- * choose. Giving each major app its own scheme makes "Pay in <app>" work on
- * both iOS and Android. If the app isn't installed the link simply no-ops, so
- * the QR + manual UPI-ID instructions remain the fallback.
- */
-export function buildUpiAppLinks(config: PaymentConfig): UpiAppLink[] {
-  const q = upiQuery(config);
-  return [
-    { name: "Google Pay", href: `tez://upi/pay?${q}` },
-    { name: "PhonePe", href: `phonepe://pay?${q}` },
-    { name: "Paytm", href: `paytmmp://pay?${q}` },
-  ];
+  // `@` is legal unencoded in a query string, and the payee's working QR leaves
+  // it raw. `%40` did resolve correctly in testing, but there is no upside to
+  // differing from a payload we know works.
+  const payee = encodeURIComponent(config.upiId).replace(/%40/g, "@");
+  return `upi://pay?pa=${payee}&pn=${encodeURIComponent(config.payeeName)}`;
 }
