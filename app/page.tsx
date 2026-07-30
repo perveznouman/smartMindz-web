@@ -22,7 +22,7 @@ import { CtaBand } from "@/components/CtaBand";
 import { Countdown } from "@/components/Countdown";
 import { getEvents, getGallery, getSiteContent, getTeam } from "@/lib/data";
 import { getContactLink } from "@/lib/notify/whatsapp";
-import { isRegistrationOpen } from "@/lib/utils";
+import { isRegistrationOpen, isVideoUploadOpen } from "@/lib/utils";
 
 const features = [
   { icon: Users, title: "All ages welcome", body: "School kids, college students, professionals and homemakers." },
@@ -46,6 +46,7 @@ export default async function HomePage() {
   const upcoming = events.filter((e) => e.status === "upcoming");
   const past = events.filter((e) => e.status === "past");
   const regOpen = isRegistrationOpen(content);
+  const videoUploadOpen = isVideoUploadOpen(content);
 
   const channels = [
     {
@@ -137,7 +138,7 @@ export default async function HomePage() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {upcoming.map((event, i) => (
               <Reveal key={event.id} delay={i * 0.08}>
-                <EventCard event={event} registrationOpen={regOpen} />
+                <EventCard event={event} registrationOpen={regOpen} videoUploadOpen={videoUploadOpen} />
               </Reveal>
             ))}
           </div>

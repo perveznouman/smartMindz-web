@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cat > *)"
+      "Bash(cat > *)",
+      "Bash(xargs -I{} echo {})",
+      "Bash(npm run *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(npx tsc *)"
     ]
   }
 }

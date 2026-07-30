@@ -1,18 +1,23 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Calendar, MapPin, ArrowRight } from "lucide-react";
+import { Calendar, MapPin, ArrowRight, Video } from "lucide-react";
 import { RegisterButton } from "@/components/registration/RegisterButton";
+import { UploadButton } from "@/components/upload/UploadButton";
 import { formatEventDate } from "@/lib/utils";
+import { FEST_EVENT_ID } from "@/lib/data/festEvents";
 import type { EventItem } from "@/lib/types";
 
 export function EventCard({
   event,
   registrationOpen = true,
+  videoUploadOpen = false,
 }: {
   event: EventItem;
   registrationOpen?: boolean;
+  videoUploadOpen?: boolean;
 }) {
   const isUpcoming = event.status === "upcoming";
+  const showUpload = isUpcoming && videoUploadOpen && event.id === FEST_EVENT_ID;
 
   return (
     <article className="card group flex flex-col overflow-hidden transition-transform duration-300 hover:-translate-y-1">
@@ -69,6 +74,11 @@ export function EventCard({
               {registrationOpen ? "Register" : "Closed"}
             </RegisterButton>
           ) : null}
+          {showUpload && (
+            <UploadButton className="btn-outline text-sm">
+              <Video className="h-3.5 w-3.5" /> Upload
+            </UploadButton>
+          )}
           <Link
             href={`/events/${event.slug}`}
             className="inline-flex items-center gap-1 text-sm font-medium text-content-muted hover:text-content"

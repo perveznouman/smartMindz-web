@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "upload-gallery": "tsx scripts/upload-gallery.ts"
+    "upload-gallery": "tsx scripts/upload-gallery.ts",
+    "google-drive-authorize": "tsx scripts/google-drive-authorize.ts",
+    "google-drive-create-folders": "tsx scripts/google-drive-create-folders.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

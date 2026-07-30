@@ -17,6 +17,20 @@ export function isRegistrationOpen(content: {
   return true;
 }
 
+/** Single source of truth for whether the video-upload feature is live.
+ * Same shape as isRegistrationOpen — controlled entirely from `site_content`
+ * (videoUploadEnabled / videoUploadClosesAt), no redeploy needed. */
+export function isVideoUploadOpen(content: {
+  videoUploadEnabled: boolean;
+  videoUploadClosesAt: string | null;
+}): boolean {
+  if (!content.videoUploadEnabled) return false;
+  if (content.videoUploadClosesAt && new Date() >= new Date(content.videoUploadClosesAt)) {
+    return false;
+  }
+  return true;
+}
+
 /** Format an ISO date into a friendly label, e.g. "26 Jan 2026". */
 export function formatEventDate(iso: string | null): string {
   if (!iso) return "Date to be announced";

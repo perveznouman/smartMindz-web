@@ -124,6 +124,18 @@ function normalizeSiteContent(merged: Record<string, unknown>): SiteContent {
       typeof merged.countdownTarget === "string" && merged.countdownTarget
         ? merged.countdownTarget
         : fallbackSiteContent.countdownTarget,
+    videoUploadEnabled:
+      typeof merged.videoUploadEnabled === "boolean"
+        ? merged.videoUploadEnabled
+        : fallbackSiteContent.videoUploadEnabled,
+    videoUploadClosesAt:
+      typeof merged.videoUploadClosesAt === "string" ? merged.videoUploadClosesAt : null,
+    videoUploadFolders:
+      merged.videoUploadFolders &&
+      typeof merged.videoUploadFolders === "object" &&
+      !Array.isArray(merged.videoUploadFolders)
+        ? (merged.videoUploadFolders as Record<string, string>)
+        : fallbackSiteContent.videoUploadFolders,
   };
 }
 
