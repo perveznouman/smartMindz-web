@@ -26,138 +26,45 @@ type VerifiedState = {
 
 const MAX_BYTES = 500 * 1024 * 1024; // 500 MB — matches the server-side cap.
 
-function xhrPut(
-  url: string,
-  opts: {
-    headers?: Record<string, string>;
-    body?: Blob;
-    onUploadProgress?: (loaded: number) => void;
-  },
-): Promise<{ status: number; text: string; getHeader: (name: string) => string | null }> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", url, true);
-    for (const [key, value] of Object.entries(opts.headers ?? {})) {
-      xhr.setRequestHeader(key, value);
-    }
-    if (opts.onUploadProgress) {
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) opts.onUploadProgress!(e.loaded);
-      };
-    }
-    xhr.onload = () =>
-      resolve({
-        status: xhr.status,
-        text: xhr.responseText,
-        getHeader: (name) => xhr.getResponseHeader(name),
-      });
-    xhr.onerror = () => reject(new Error("Network error."));
-    xhr.send(opts.body);
-  });
-}
-
-function extractFileId(text: string): string | null {
-  try {
-    const data = JSON.parse(text) as { id?: unknown };
-    return typeof data.id === "string" ? data.id : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Ask Google how many bytes of this resumable session it actually has,
- * per Drive's resumable-upload status-check protocol: a PUT with no body
- * and a Content-Range declaring the total size. Drive replies with the file
- * resource if it's done, or 308 + a Range header (how much it received so
- * far) if it isn't — used both to recover from an ambiguous response (the
- * progress bar can hit 100% before a hiccup hides Google's confirmation,
- * even though the file already landed) and to resume a genuinely dropped
- * upload from where it left off instead of restarting from scratch.
- */
-async function queryUploadStatus(
-  uploadUrl: string,
-  fileSize: number,
-): Promise<{ done: true; fileId: string } | { done: false; bytesUploaded: number }> {
-  const res = await xhrPut(uploadUrl, { headers: { "Content-Range": `bytes */${fileSize}` } });
-  const fileId = extractFileId(res.text);
-  if (fileId) return { done: true, fileId };
-  if (res.status === 308) {
-    const range = res.getHeader("Range"); // e.g. "bytes=0-12345", absent if nothing received yet
-    const match = range?.match(/-(\d+)$/);
-    return { done: false, bytesUploaded: match ? Number(match[1]) + 1 : 0 };
-  }
-  throw new Error(`Couldn't check upload status (status ${res.status}).`);
-}
-
-const MAX_UPLOAD_ATTEMPTS = 4;
-
 /**
  * PUTs the file straight to Google's resumable-upload session URL — no
  * Authorization header needed, the session URL itself is the credential (see
  * lib/google/drive.ts). Uses XHR rather than fetch so upload progress is
  * observable; fetch has no upload-progress event.
  *
- * Retries by resuming from the byte offset Google actually received, not by
- * re-sending the whole file — a single unbroken transfer is unreliable on a
- * flaky mobile connection uploading a multi-MB video, and restarting from
- * zero on every retry would make that worse, not better.
+ * Resolves with the new Drive file id, or null when the upload may well have
+ * succeeded but the response wasn't readable. Either way /api/video/complete
+ * has the final say, so this never needs to decide "did it work?" itself.
+ *
+ * Deliberately a single PUT with no resume-from-offset retry: Drive does not
+ * expose the `Range` response header to browsers, so a client cannot learn
+ * how many bytes actually arrived, and any "resume" would silently restart
+ * from zero. Real resumption would need chunked uploads — worth adding only
+ * if large uploads prove unreliable in practice.
  */
-async function putFileToDrive(
+function putFileToDrive(
   uploadUrl: string,
   file: File,
   onProgress: (pct: number) => void,
-): Promise<string> {
-  let startByte = 0;
-
-  for (let attempt = 1; attempt <= MAX_UPLOAD_ATTEMPTS; attempt++) {
-    try {
-      const res = await xhrPut(uploadUrl, {
-        headers: {
-          "Content-Type": file.type || "application/octet-stream",
-          ...(startByte > 0
-            ? { "Content-Range": `bytes ${startByte}-${file.size - 1}/${file.size}` }
-            : {}),
-        },
-        body: startByte > 0 ? file.slice(startByte) : file,
-        onUploadProgress: (loaded) =>
-          onProgress(Math.round(((startByte + loaded) / file.size) * 100)),
-      });
-
-      const fileId = extractFileId(res.text);
-      if (fileId) return fileId;
-
-      if (res.status >= 200 && res.status < 300) {
-        // Accepted, but no id in a body we could read — confirm directly.
-        const status = await queryUploadStatus(uploadUrl, file.size);
-        if (status.done) return status.fileId;
-        startByte = status.bytesUploaded;
-      } else if (res.status === 308) {
-        const range = res.getHeader("Range");
-        const match = range?.match(/-(\d+)$/);
-        startByte = match ? Number(match[1]) + 1 : startByte;
-      } else {
-        throw new Error(`Drive upload failed: ${res.status}`);
-      }
-    } catch {
-      // Transport-level failure — ask Google what it actually has before
-      // deciding whether to resume from partway or give up.
+): Promise<string | null> {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", uploadUrl, true);
+    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
       try {
-        const status = await queryUploadStatus(uploadUrl, file.size);
-        if (status.done) return status.fileId;
-        startByte = status.bytesUploaded;
+        const data = JSON.parse(xhr.responseText) as { id?: unknown };
+        resolve(typeof data.id === "string" ? data.id : null);
       } catch {
-        // Status check itself failed too (e.g. no connectivity at all) —
-        // fall through to the retry/backoff below.
+        resolve(null);
       }
-    }
-
-    if (attempt < MAX_UPLOAD_ATTEMPTS) {
-      await new Promise((r) => setTimeout(r, 1000 * attempt));
-    }
-  }
-
-  throw new Error("Upload failed after multiple attempts.");
+    };
+    xhr.onerror = () => resolve(null);
+    xhr.send(file);
+  });
 }
 
 export function UploadForm({
@@ -287,17 +194,10 @@ export function UploadForm({
         return;
       }
 
-      // Best-effort: even if this throws, /api/video/complete below is the
-      // authoritative check. Reading this PUT's own confirmation in the
-      // browser is subject to CORS/response-timing quirks that can make a
-      // file that landed just fine look like it failed, so a failure here
-      // doesn't get shown to the user directly — the server checks Drive
-      // itself next, with no CORS involved.
-      try {
-        await putFileToDrive(sessionData.uploadUrl, file, setProgress);
-      } catch {
-        // fall through — let /api/video/complete decide.
-      }
+      // May be null if the response wasn't readable — /api/video/complete
+      // verifies against Drive either way, so we pass it along as a hint
+      // rather than treating it as the verdict.
+      const driveFileId = await putFileToDrive(sessionData.uploadUrl, file, setProgress);
 
       const completeRes = await fetch("/api/video/complete", {
         method: "POST",
@@ -306,6 +206,7 @@ export function UploadForm({
           registrationCode: verified.registrationCode,
           categoryId: verified.categoryId,
           eventName: verified.event,
+          ...(driveFileId ? { driveFileId } : {}),
         }),
       });
       if (!completeRes.ok) {
@@ -449,7 +350,9 @@ export function UploadForm({
                 setUploadError(null);
               }}
             />
-            <p className="mt-1 text-xs text-content-muted">MP4, MOV, WEBM or MKV — up to 500 MB.</p>
+            <p className="mt-1 text-xs text-content-muted">
+              MP4, MOV, WEBM, MKV or AVI — up to 500 MB.
+            </p>
             {uploadError && <p className="mt-1 text-xs text-danger">{uploadError}</p>}
           </div>
 

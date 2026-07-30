@@ -48,17 +48,27 @@ async function getAccessToken(): Promise<string> {
  * caller (browser) then PUTs the file bytes directly to that URL — no
  * Authorization header needed on that PUT, the session URL itself is the
  * credential (valid ~1 week per Google's resumable upload protocol).
+ *
+ * `origin` MUST be passed when the eventual PUT comes from a browser.
+ * Google decides at *session-creation* time whether that session's upload
+ * responses will carry CORS headers, based on the Origin on this request —
+ * not on the Origin of the PUT itself. Omit it and the upload still
+ * succeeds server-side, but the browser cannot read the response and fires
+ * `onerror`, which looks exactly like a failed upload at 100%. Verified
+ * 3/3 both ways against the live API.
  */
 export async function createResumableUploadSession({
   folderId,
   fileName,
   mimeType,
   fileSize,
+  origin,
 }: {
   folderId: string;
   fileName: string;
   mimeType: string;
   fileSize: number;
+  origin?: string;
 }): Promise<string> {
   const accessToken = await getAccessToken();
   const res = await fetch(
@@ -70,6 +80,7 @@ export async function createResumableUploadSession({
         "Content-Type": "application/json; charset=UTF-8",
         "X-Upload-Content-Type": mimeType,
         "X-Upload-Content-Length": String(fileSize),
+        ...(origin ? { Origin: origin } : {}),
       },
       body: JSON.stringify({ name: fileName, parents: [folderId] }),
     },
@@ -85,12 +96,46 @@ export async function createResumableUploadSession({
 }
 
 /**
- * Finds the most recently created file in a folder whose name contains
- * `prefix`. Used by /api/video/complete to authoritatively confirm an
- * upload server-to-server — the browser's own read of its upload's response
- * is subject to CORS/timing quirks that can make a landed file look failed,
- * so the server double-checks against Drive directly instead of trusting it.
- * "Most recent" also means a retried upload's newest attempt always wins.
+ * Confirms `fileId` really is a file this upload created: it must live in
+ * `folderId` and its name must start with `namePrefix` (the
+ * `${registrationCode} - ` we assigned). Without both checks a client could
+ * hand /api/video/complete any Drive id it knew and have it linked to a
+ * registration. Returns the id when it checks out, else null.
+ */
+export async function verifyFileInFolder(
+  fileId: string,
+  folderId: string,
+  namePrefix: string,
+): Promise<string | null> {
+  const accessToken = await getAccessToken();
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}` +
+      `?fields=id,name,parents,trashed`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(`Drive file lookup failed: ${res.status} ${await res.text()}`);
+  }
+  const file = (await res.json()) as {
+    id: string;
+    name?: string;
+    parents?: string[];
+    trashed?: boolean;
+  };
+  if (file.trashed) return null;
+  if (!file.parents?.includes(folderId)) return null;
+  if (!file.name?.startsWith(namePrefix)) return null;
+  return file.id;
+}
+
+/**
+ * Finds the most recently created file in a folder whose name starts with
+ * `prefix`. The fallback path for /api/video/complete: used when the browser
+ * couldn't report the id of the file it just uploaded (an upload can land
+ * on Drive while the browser still fails to read the response — see
+ * createResumableUploadSession). "Most recent" means a re-upload's newest
+ * attempt wins.
  */
 export async function findLatestFileByPrefix(
   folderId: string,

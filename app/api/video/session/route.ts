@@ -8,13 +8,43 @@ import { createResumableUploadSession } from "@/lib/google/drive";
 export const dynamic = "force-dynamic";
 
 const MAX_BYTES = 500 * 1024 * 1024; // 500 MB — soft cap, raise if needed.
-const ALLOWED_TYPES = [
-  "video/mp4",
-  "video/quicktime",
-  "video/webm",
-  "video/x-matroska",
-  "video/3gpp",
+
+/**
+ * Validated on extension rather than MIME type. Browsers report video MIME
+ * types inconsistently — Android often sends application/octet-stream, and
+ * plenty of real phone videos arrive as types outside any short allow-list.
+ * The extension is what actually decides whether a judge can play the file,
+ * and whitelisting it also stops an arbitrary client-supplied suffix ending
+ * up in the Drive filename (see driveFileName below).
+ */
+const ALLOWED_EXTENSIONS = [
+  ".mp4",
+  ".m4v",
+  ".mov",
+  ".webm",
+  ".mkv",
+  ".avi",
+  ".3gp",
+  ".3g2",
+  ".mpeg",
+  ".mpg",
+  ".ogv",
 ];
+
+/**
+ * Only forward an Origin we know is our own page. Google echoes whatever it
+ * gets into the upload session's Access-Control-Allow-Origin, so this stays
+ * same-origin-only rather than relaying an arbitrary client-supplied value.
+ * Returns undefined when it doesn't match, which degrades to the old
+ * no-CORS behaviour that /api/video/complete already covers.
+ */
+function sameOrigin(request: Request): string | undefined {
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("host");
+  if (!origin || !host) return undefined;
+  const proto = request.headers.get("x-forwarded-proto") ?? "http";
+  return origin === `${proto}://${host}` ? origin : undefined;
+}
 
 /**
  * POST /api/video/session
@@ -47,9 +77,12 @@ export async function POST(request: Request) {
   if (fileSize <= 0 || fileSize > MAX_BYTES) {
     return NextResponse.json({ error: "That video is too large (max 500 MB)." }, { status: 400 });
   }
-  if (!ALLOWED_TYPES.includes(mimeType)) {
+
+  const dot = fileName.lastIndexOf(".");
+  const ext = dot > 0 ? fileName.slice(dot).toLowerCase() : "";
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
     return NextResponse.json(
-      { error: "Upload an MP4, MOV, WEBM or MKV video." },
+      { error: "That file type isn't supported. Upload an MP4, MOV, WEBM, MKV or AVI video." },
       { status: 400 },
     );
   }
@@ -92,8 +125,7 @@ export async function POST(request: Request) {
   // Named by registration code, not the participant's raw filename — makes
   // the Drive folder searchable/sortable by code, and avoids trusting
   // whatever name the browser sent (could be blank, or unhelpful like
-  // "IMG_1234.mp4").
-  const ext = fileName.includes(".") ? fileName.slice(fileName.lastIndexOf(".")) : "";
+  // "IMG_1234.mp4"). `ext` is whitelisted above.
   const safeName = result.row.full_name.replace(/[\\/:*?"<>|]+/g, " ").trim();
   const driveFileName = `${registrationCode} - ${safeName}${ext}`;
 
@@ -101,8 +133,11 @@ export async function POST(request: Request) {
     const uploadUrl = await createResumableUploadSession({
       folderId,
       fileName: driveFileName,
-      mimeType,
+      // Browser-reported MIME is unreliable (see ALLOWED_EXTENSIONS); fall
+      // back to a generic video type rather than storing octet-stream.
+      mimeType: mimeType.startsWith("video/") ? mimeType : "video/mp4",
       fileSize,
+      origin: sameOrigin(request),
     });
     return NextResponse.json({ ok: true, uploadUrl });
   } catch (err) {

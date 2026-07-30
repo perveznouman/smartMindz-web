@@ -2,20 +2,20 @@ import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase/server";
 import { getSiteContent } from "@/lib/data";
 import { getFestCategory } from "@/lib/data/festEvents";
-import { findLatestFileByPrefix } from "@/lib/google/drive";
+import { findLatestFileByPrefix, verifyFileInFolder } from "@/lib/google/drive";
 
 export const dynamic = "force-dynamic";
 
 /**
  * POST /api/video/complete
- * Step 3 — called after the browser's best-effort PUT to Drive (see
- * UploadForm.tsx), regardless of whether that PUT itself reported success.
- * A browser reading the PUT's own confirmation is subject to CORS/response
- * timing quirks that don't reliably reflect whether the file actually
- * landed — this route is the authoritative check instead: server-to-server
- * (no CORS involved), it asks Drive directly whether a file matching this
- * registration exists in its folder, using the deterministic
- * `${registrationCode} - ...` name /api/video/session assigned it.
+ * Step 3 — links the uploaded Drive file to the registration.
+ *
+ * Prefers the `driveFileId` the browser read back from its own upload, but
+ * never trusts it blind: it's checked to be in this event's folder and to
+ * carry our `${registrationCode} - ` name before being stored. When the
+ * browser couldn't read the id at all — an upload can land on Drive while
+ * the response stays unreadable, e.g. from an in-app browser — the server
+ * falls back to searching the folder itself.
  */
 export async function POST(request: Request) {
   let json: unknown;
@@ -25,7 +25,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { registrationCode, categoryId, eventName } = (json ?? {}) as Record<string, unknown>;
+  const { registrationCode, categoryId, eventName, driveFileId: claimedFileId } =
+    (json ?? {}) as Record<string, unknown>;
   if (
     typeof registrationCode !== "number" ||
     typeof categoryId !== "string" ||
@@ -73,11 +74,18 @@ export async function POST(request: Request) {
     );
   }
 
-  let driveFileId: string | null;
+  const namePrefix = `${registrationCode} - `;
+  let driveFileId: string | null = null;
   try {
-    driveFileId = await findLatestFileByPrefix(folderId, `${registrationCode} - `);
+    if (typeof claimedFileId === "string" && claimedFileId) {
+      driveFileId = await verifyFileInFolder(claimedFileId, folderId, namePrefix);
+    }
+    // No id from the browser, or it didn't check out — search the folder.
+    if (!driveFileId) {
+      driveFileId = await findLatestFileByPrefix(folderId, namePrefix);
+    }
   } catch (err) {
-    console.error("Drive file search failed:", err);
+    console.error("Drive file lookup failed:", err);
     return NextResponse.json(
       { error: "We couldn't confirm your upload. Please try again." },
       { status: 500 },
