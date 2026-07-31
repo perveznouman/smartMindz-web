@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { RegistrationProvider } from "@/components/registration/RegistrationContext";
+import { UploadProvider } from "@/components/upload/UploadContext";
 import { ColorManager } from "@/lib/theme/colors";
 import { getSiteContent } from "@/lib/data";
 
@@ -70,11 +71,13 @@ export default async function RootLayout({
       <body className="font-sans">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <RegistrationProvider content={content}>
-            <div className="flex min-h-screen flex-col">
-              <Navbar content={content} />
-              <main className="flex-1">{children}</main>
-              <Footer content={content} />
-            </div>
+            <UploadProvider>
+              <div className="flex min-h-screen flex-col">
+                <Navbar content={content} />
+                <main className="flex-1">{children}</main>
+                <Footer content={content} />
+              </div>
+            </UploadProvider>
           </RegistrationProvider>
         </ThemeProvider>
       </body>

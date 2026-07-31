@@ -138,4 +138,7 @@ export const fallbackSiteContent: SiteContent = {
   paymentUpiId: "perveznouman@okicici",
   paymentPayeeName: "Nouman Pervez",
   paymentNote: "SmartMindz Registration",
+  videoUploadEnabled: false,
+  videoUploadClosesAt: null,
+  videoUploadFolders: {},
 };
