@@ -93,6 +93,10 @@ alter table registrations add column if not exists event_name   text;
 alter table registrations add column if not exists payment_url  text;
 -- registration_code backfill for existing tables → see content/registration-code.sql
 
+-- Video upload feature: links a registration to the Drive file uploaded for it.
+alter table registrations add column if not exists video_drive_file_id text;
+alter table registrations add column if not exists video_uploaded_at   timestamptz;
+
 create index if not exists idx_event_categories_category on event_categories(category_id);
 create index if not exists idx_gallery_event on gallery_photos(event_id);
 
@@ -204,6 +208,17 @@ on conflict (key) do update set value = excluded.value;
 -- won't work either — just add the key manually in the dashboard when needed).
 insert into site_content (key, value) values
   ('registrationOpen', 'true')
+on conflict (key) do nothing;
+
+-- Video upload on/off switch for the current fest's online events — same
+-- shape as registrationOpen (see lib/utils.ts isVideoUploadOpen). Seeded
+-- disabled: turn on only once videoUploadFolders below is actually populated
+-- with real Drive folder ids, otherwise uploads have nowhere to go.
+-- videoUploadClosesAt is intentionally not seeded, same reasoning as
+-- registrationClosesAt above.
+insert into site_content (key, value) values
+  ('videoUploadEnabled', 'false'),
+  ('videoUploadFolders', '{}')
 on conflict (key) do nothing;
 
 -- NOTE: gallery_photos rows are populated by `npm run upload-gallery`, which

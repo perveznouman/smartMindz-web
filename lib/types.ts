@@ -99,6 +99,19 @@ export interface SiteContent {
   paymentUpiId: string;
   paymentPayeeName: string;
   paymentNote: string;
+  /** Global video-upload on/off switch for the current fest's online events —
+   * mirrors registrationOpen. Toggle from Supabase, no redeploy needed. */
+  videoUploadEnabled: boolean;
+  /** Optional auto-close instant (ISO string), same semantics as
+   * registrationClosesAt. */
+  videoUploadClosesAt: string | null;
+  /** `${categoryId}::${eventName}` (see festEvents.ts) -> Google Drive folder
+   * id that pair's uploaded videos go into. Keyed by category + event, not
+   * event name alone, because some event names repeat across categories
+   * (e.g. "Fancy Dress (Online)" is both category-1 and category-2) and each
+   * pair needs its own folder. Populated by
+   * scripts/google-drive-create-folders.ts, then pasted in from Supabase. */
+  videoUploadFolders: Record<string, string>;
 }
 
 export interface RegistrationInput {

@@ -5,7 +5,7 @@ import { EventCard } from "@/components/EventCard";
 import { Gallery } from "@/components/Gallery";
 import { CtaBand } from "@/components/CtaBand";
 import { getEvents, getGallery, getSiteContent } from "@/lib/data";
-import { isRegistrationOpen } from "@/lib/utils";
+import { isRegistrationOpen, isVideoUploadOpen } from "@/lib/utils";
 
 // Re-fetch from Supabase at most every 60s so content edits go live without a redeploy.
 export const revalidate = 60;
@@ -24,6 +24,7 @@ export default async function EventsPage() {
   const upcoming = events.filter((e) => e.status === "upcoming");
   const past = events.filter((e) => e.status === "past");
   const regOpen = isRegistrationOpen(content);
+  const videoUploadOpen = isVideoUploadOpen(content);
 
   return (
     <>
@@ -40,7 +41,7 @@ export default async function EventsPage() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {upcoming.map((e) => (
                 <Reveal key={e.id}>
-                  <EventCard event={e} registrationOpen={regOpen} />
+                  <EventCard event={e} registrationOpen={regOpen} videoUploadOpen={videoUploadOpen} />
                 </Reveal>
               ))}
             </div>

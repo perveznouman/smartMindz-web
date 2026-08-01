@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Calendar, MapPin, ArrowLeft, Trophy, FileText, Download } from "lucide-react";
+import { Calendar, MapPin, ArrowLeft, Trophy, FileText, Download, Video } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { Gallery } from "@/components/Gallery";
 import { RegisterButton } from "@/components/registration/RegisterButton";
+import { UploadButton } from "@/components/upload/UploadButton";
 import { CtaBand } from "@/components/CtaBand";
 import { getEventBySlug, getGallery, getResults, getSiteContent } from "@/lib/data";
-import { formatEventDate, isRegistrationOpen } from "@/lib/utils";
+import { formatEventDate, isRegistrationOpen, isVideoUploadOpen } from "@/lib/utils";
+import { FEST_EVENT_ID } from "@/lib/data/festEvents";
 
 // Re-fetch from Supabase at most every 60s so content edits go live without a redeploy.
 export const revalidate = 60;
@@ -41,6 +43,7 @@ export default async function EventDetailPage({ params }: Props) {
   // Registration is one shared form for the site (not per-event), so it's
   // gated by the global site_content toggle, not this event's own columns.
   const regOpen = isUpcoming && isRegistrationOpen(content);
+  const showUpload = event.id === FEST_EVENT_ID && isVideoUploadOpen(content);
   const rules = results.filter((r) => r.kind === "rules");
   const resultItems = results.filter((r) => r.kind === "result");
 
@@ -78,10 +81,15 @@ export default async function EventDetailPage({ params }: Props) {
           <p className="mt-5 text-base leading-relaxed text-content-muted sm:text-lg">{event.description}</p>
 
           {isUpcoming && (
-            <div className="mt-8">
+            <div className="mt-8 flex flex-wrap gap-3">
               <RegisterButton eventId={event.id} disabled={!regOpen} className="btn-primary px-7 py-3 text-base">
                 {regOpen ? `Register for ${event.title}` : "Registrations closed"}
               </RegisterButton>
+              {showUpload && (
+                <UploadButton className="btn-outline px-7 py-3 text-base">
+                  <Video className="h-4 w-4" /> Upload your video
+                </UploadButton>
+              )}
             </div>
           )}
         </div>
